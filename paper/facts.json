@@ -1,0 +1,597 @@
+{
+  "schema_version": 1,
+  "model": "Qwen3.8-Flash-Next",
+  "runs_covered": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "runs_pending": [
+    5,
+    6
+  ],
+  "facts": [
+    {
+      "id": "r1-baseline-tturn",
+      "run": 1,
+      "type": "result",
+      "claim": "Shipped baseline T_turn is 168.945 s (P32k 270.14 t/s, D32k 29.863, FULL peak 13020 MiB)",
+      "numbers": {
+        "T_turn_s": 168.945,
+        "P32k_tps": 270.14,
+        "D32k_tps": 29.863,
+        "FULL_peak_MiB": 13020
+      },
+      "caveats": "Q2 only; fork bea3b12d; 3 reps",
+      "source_file": "results.jsonl + DECISIONS.md"
+    },
+    {
+      "id": "r1-candidate-blocked",
+      "run": 1,
+      "type": "result",
+      "claim": "Best candidate ncmoe46/ub2048 cuts T_turn 34.6% (110.55 s) and FULL peak 12484 MiB (−536 vs baseline) but must not ship",
+      "numbers": {
+        "T_turn_s": 110.55,
+        "delta_pct": -34.6,
+        "FULL_peak_MiB": 12484
+      },
+      "caveats": "Blocked by sanity gate (CUDA abort)",
+      "source_file": "REPORT.md L6, L21, L26"
+    },
+    {
+      "id": "r1-ub-crash",
+      "run": 1,
+      "type": "problem",
+      "claim": "Any -ub > 512 causes CUDA illegal memory access on Task 02 prompt_B as first request; reproduced across ub 768/1024/2048 and ncmoe 42/43/46",
+      "numbers": {
+        "safe_ub": 512
+      },
+      "caveats": "Content-dependent; warm-up with 4061-tok masks it; not prompt-size",
+      "source_file": "DECISIONS.md D29"
+    },
+    {
+      "id": "r1-vram-surcharge",
+      "run": 1,
+      "type": "result",
+      "claim": "Full-window VRAM surcharge over load is +430 MiB at ub512 and +1186 MiB at ub1024 — not the doc's blanket +308 MiB",
+      "numbers": {
+        "surcharge_ub512_MiB": 430,
+        "surcharge_ub1024_MiB": 1186
+      },
+      "caveats": "Load-time VRAM is not a valid peak predictor",
+      "source_file": "DECISIONS.md D10/D14"
+    },
+    {
+      "id": "r1-kv-q8-stays",
+      "run": 1,
+      "type": "result",
+      "claim": "q8_0 KV same-top-token 96.875% vs f16 noise floor 97.656% over 256 points — cannot distinguish; q8 stays",
+      "numbers": {
+        "q8_same_top_pct": 96.875,
+        "f16_noise_floor_pct": 97.656,
+        "n": 256
+      },
+      "caveats": "mean KL unreliable (top-20 mismatches); KLD tooling absent",
+      "source_file": "DECISIONS.md D22"
+    },
+    {
+      "id": "r1-prefix-reuse",
+      "run": 1,
+      "type": "result",
+      "claim": "Prefix reuse works at defaults: 60k turn then follow-up reuses 96.3% of context (reuse_ratio 0.037)",
+      "numbers": {
+        "reuse_ratio": 0.037,
+        "reuse_pct": 96.3,
+        "turn1_tokens": 60023
+      },
+      "caveats": "Leading config ub2048 n46",
+      "source_file": "DECISIONS.md D26"
+    },
+    {
+      "id": "r1-verdict-no-change",
+      "run": 1,
+      "type": "result",
+      "claim": "Verdict NO CHANGE — config left at ncmoe42/ub512; apply script not run",
+      "numbers": {},
+      "caveats": "Honest result when sanity fails as process abort",
+      "source_file": "REPORT.md L6 + DECISIONS.md D30"
+    },
+    {
+      "id": "r1-assumption-vram-gate",
+      "run": 1,
+      "type": "assumption",
+      "claim": "VRAM gate: post-full-fill peak ≤ 13400 MiB; baseline headroom only 380 MiB",
+      "numbers": {
+        "gate_MiB": 13400,
+        "baseline_peak": 13020,
+        "headroom_MiB": 380
+      },
+      "caveats": "Binding constraint of the night",
+      "source_file": "DECISIONS.md D9"
+    },
+    {
+      "id": "r1-method-api-timings",
+      "run": 1,
+      "type": "method",
+      "claim": "Speed metrics from llama-server API timings (no llama-bench/perplexity in fork)",
+      "numbers": {},
+      "caveats": "Hard rule forbids building missing tools / mainline against model",
+      "source_file": "DECISIONS.md D4"
+    },
+    {
+      "id": "r1-decode-decay",
+      "run": 1,
+      "type": "result",
+      "claim": "Decode decays D0 36.373 → D32k 29.863 (−17.9%) → FULL 18.810 (−48.3% from D0)",
+      "numbers": {
+        "D0": 36.373,
+        "D32k": 29.863,
+        "FULL_decode": 18.81
+      },
+      "caveats": "Confirms §2 ~48% claim",
+      "source_file": "DECISIONS.md D12"
+    },
+    {
+      "id": "r2-patch-fixes-crash",
+      "run": 2,
+      "type": "result",
+      "claim": "mmq.cu #27792 patch: Q2 n46/ub2048 cold-starts 11/11 including prompt_B ×3 — Run 1 ub crash gone",
+      "numbers": {
+        "cold_passed": 11,
+        "cold_total": 11
+      },
+      "caveats": "New binary; do not reuse Run 1 speed numbers",
+      "source_file": "DECISIONS-v2.md V13"
+    },
+    {
+      "id": "r2-best-q2",
+      "run": 2,
+      "type": "result",
+      "claim": "Best Q2 = n46/ub2048: T_turn 108.2 s (−33.8%), session 1046.1 s (−8.8% vs shipped 1146.7), FULL peak 12486, Task 02 2/2",
+      "numbers": {
+        "T_turn_s": 108.2,
+        "session_s": 1046.14,
+        "session_delta_pct": -8.8,
+        "FULL_peak_MiB": 12486,
+        "task02_pass": "2/2"
+      },
+      "caveats": "Recommended not applied this night",
+      "source_file": "REPORT-v2.md L6, L17, L21-22, L26"
+    },
+    {
+      "id": "r2-session-vs-tturn",
+      "run": 2,
+      "type": "result",
+      "claim": "In growing sessions ub2048 is worth 8.8% of session time, not 34% T_turn — decode dominates (~85%)",
+      "numbers": {
+        "session_delta_pct": -8.8,
+        "tturn_delta_pct": -33.8
+      },
+      "caveats": "Matches how Zef uses flashnext",
+      "source_file": "DECISIONS-v2.md V12"
+    },
+    {
+      "id": "r2-iq3-close-but-gate4",
+      "run": 2,
+      "type": "comparison",
+      "claim": "IQ3 n46/ub2048 session 1077.2 s = 1.030× Q2 (inside 3% 'no difference') but Task 02 1/2 → not recommended",
+      "numbers": {
+        "iq3_session_s": 1077.22,
+        "q2_session_s": 1046.14,
+        "ratio": 1.03,
+        "iq3_task02": "1/2"
+      },
+      "caveats": "IQ3 faster prefill, slower decode (−4.4% D0)",
+      "source_file": "REPORT-v2.md L7, L22, L26, L39"
+    },
+    {
+      "id": "r2-iq3-notifier",
+      "run": 2,
+      "type": "problem",
+      "claim": "IQ3 Task 02 run1 failed gate 4: NOTIFIER bare annotation in circuit_breaker.py → NameError; diagnostic logic PASS",
+      "numbers": {},
+      "caveats": "Spec-reading ambiguity; Q2 had never made this slip yet in Run 2",
+      "source_file": "DECISIONS-v2.md V19"
+    },
+    {
+      "id": "r2-iq3-smaller-disk",
+      "run": 2,
+      "type": "result",
+      "claim": "IQ3_XXS total 75.83 GB on disk vs Q2 78.86 GB — smaller file, mixed per-layer expert types",
+      "numbers": {
+        "iq3_GB": 75.83,
+        "q2_GB": 78.86
+      },
+      "caveats": "Name is whole-file 3.00 bpw target; experts are a mix",
+      "source_file": "DECISIONS-v2.md V3"
+    },
+    {
+      "id": "r2-256k-ub512",
+      "run": 2,
+      "type": "result",
+      "claim": "256k reachable at ub512 n45: FULL 240183 tok peak 13348 MiB (52 MiB margin — prefer n46); prefill 167.9 t/s",
+      "numbers": {
+        "peak_MiB": 13348,
+        "prompt_n": 240183,
+        "prefill_tps": 167.9
+      },
+      "caveats": "Context option not speed option",
+      "source_file": "DECISIONS-v2.md V20"
+    },
+    {
+      "id": "r2-verdict-q2",
+      "run": 2,
+      "type": "result",
+      "claim": "Verdict: Quant UD-Q2_K_XL at ncmoe46/ub2048; config not touched",
+      "numbers": {},
+      "caveats": "apply-flashnext-v2.sh NOT run",
+      "source_file": "REPORT-v2.md L6, L84"
+    },
+    {
+      "id": "r3-temp10-no-help",
+      "run": 3,
+      "type": "result",
+      "claim": "Temp 1.0 did not help: gate4 3/6 vs temp 0.3 5/6 (Fisher p≈0.55, n.s.); keep --temp 0.3",
+      "numbers": {
+        "t10_pass": "3/6",
+        "t03_pass": "5/6",
+        "fisher_p": 0.55
+      },
+      "caveats": "n=3 per cell; not statistically significant",
+      "source_file": "REPORT-v3.md"
+    },
+    {
+      "id": "r3-notifier-all-fails",
+      "run": 3,
+      "type": "problem",
+      "claim": "All 4 gate-4 failures are NOTIFIER in wrong module; prompt B never names the module; diagnostic logic always PASS",
+      "numbers": {
+        "failures": 4
+      },
+      "caveats": "First Q2 NOTIFIER slip on record (temp 1.0 r3)",
+      "source_file": "DECISIONS-v3.md W12/W10"
+    },
+    {
+      "id": "r3-iq3-overthink",
+      "run": 3,
+      "type": "problem",
+      "claim": "IQ3 hit 60k length cap on 4/10 attempts vs Q2 0/6; voids are self-audit spirals not hard loops",
+      "numbers": {
+        "iq3_voids": "4/10",
+        "q2_voids": "0/6"
+      },
+      "caveats": "Fisher p≈0.23 n.s.; still operationally costly",
+      "source_file": "REPORT-v3.md"
+    },
+    {
+      "id": "r3-cost-per-pass",
+      "run": 3,
+      "type": "comparison",
+      "claim": "Seconds per passing Task 02: Q2@0.3 ~1437s; Q2@1.0 ~1896s; IQ3 either temp ~5500–5640s",
+      "numbers": {
+        "q2_t03_s": 1437,
+        "q2_t10_s": 1896,
+        "iq3_s": 5500
+      },
+      "caveats": "Uses common decode rate; one flip moves columns a lot",
+      "source_file": "REPORT-v3.md §3"
+    },
+    {
+      "id": "r3-harness-bug",
+      "run": 3,
+      "type": "problem",
+      "claim": "Extractor took first code block naming a file; usage snippet stole circuit_breaker.py; fixed and re-scored (still FAIL on NOTIFIER)",
+      "numbers": {},
+      "caveats": "Harness bug not model bug; prior runs byte-identical after fix",
+      "source_file": "DECISIONS-v3.md W9"
+    },
+    {
+      "id": "r3-opencode-limit",
+      "run": 3,
+      "type": "assumption",
+      "claim": "OpenCode flashnext has limit.output 32768 — would cut most Task 02 answers (32–55k tokens typical)",
+      "numbers": {
+        "limit_output": 32768
+      },
+      "caveats": "Out of scope; bigger lever than temp",
+      "source_file": "REPORT-v3.md"
+    },
+    {
+      "id": "r3-verdict",
+      "run": 3,
+      "type": "result",
+      "claim": "Keep Q2 n46/ub2048 at temp 0.3; nothing applied",
+      "numbers": {},
+      "caveats": "Cells: q2_t03 3/3, q2_t10 2/3, iq3_t03 2/3, iq3_t10 1/3",
+      "source_file": "REPORT-v3.md L6, L21-24"
+    },
+    {
+      "id": "r4-engine-m",
+      "run": 4,
+      "type": "result",
+      "claim": "Mainline M beats fork F: session 814.9 vs 1056.4 s (−23%), FULL peak 10482 vs 12486 MiB (−2004), P32k +31.5%, D0 +12.2%",
+      "numbers": {
+        "M_session_s": 814.87,
+        "F_session_s": 1056.39,
+        "session_delta_pct": -23.0,
+        "M_FULL_peak": 10482,
+        "F_FULL_peak": 12486
+      },
+      "caveats": "Same Q2 n46/ub2048 flags; driver 615.71; F today within noise of Run 2 F",
+      "source_file": "REPORT-v4.md"
+    },
+    {
+      "id": "r4-mtp-yes",
+      "run": 4,
+      "type": "result",
+      "claim": "MTP n-max 2 on M (n47, draft experts CPU): session 782.8±8.5 vs M 814.9±1.9 (−3.94%, 3 reps) beyond noise; gates 1–4 PASS",
+      "numbers": {
+        "mtp_session_mean": 782.78,
+        "mtp_session_sd": 8.48,
+        "m_session_mean": 814.87,
+        "delta_pct": -3.94
+      },
+      "caveats": "Modest, content-dependent acceptance; −7% D0/P32k; margin 714 MiB",
+      "source_file": "DECISIONS-v4.md X22"
+    },
+    {
+      "id": "r4-mtp-nmax",
+      "run": 4,
+      "type": "comparison",
+      "claim": "MTP n-max sweep session (rep1): k=3 814.4 (+0.2%), k=2 792.4 (−2.5%), k=1 839.9 (+3.3%) vs M no-MTP 813.15",
+      "numbers": {
+        "k3": 814.44,
+        "k2": 792.43,
+        "k1": 839.87
+      },
+      "caveats": "k=2 won extra reps",
+      "source_file": "REPORT-v4.md"
+    },
+    {
+      "id": "r4-why-m-faster",
+      "run": 4,
+      "type": "result",
+      "claim": "F CUDA0 compute buffer grows to 4469 MiB (expected 1722) at full fill; M surcharge fixed +486 MiB at load for both 128k and 256k",
+      "numbers": {
+        "F_cuda0_compute_MiB": 4469,
+        "F_expected_MiB": 1722,
+        "M_surcharge_MiB": 486
+      },
+      "caveats": "Decode advantage grows with depth (+12%→+21%→+46%)",
+      "source_file": "DECISIONS-v4.md X8"
+    },
+    {
+      "id": "r4-fit-rejected",
+      "run": 4,
+      "type": "result",
+      "claim": "--fit on --fit-target 3000 session −1.65% vs manual n46 — below 3% noise floor; rejected (also non-deterministic vs free VRAM)",
+      "numbers": {
+        "session_delta_pct": -1.65
+      },
+      "caveats": "fit aborts when -ngl/-ot/-ncmoe user-set",
+      "source_file": "DECISIONS-v4.md X11/B3"
+    },
+    {
+      "id": "r4-256k",
+      "run": 4,
+      "type": "result",
+      "claim": "256k on M ub2048: use n48 FULL peak 12366 (1034 margin); n47 peak 13278 (122 margin); prefill ~691 t/s; MTP+256k OOM",
+      "numbers": {
+        "n48_peak": 12366,
+        "n47_peak": 13278,
+        "prefill_tps": 690.8
+      },
+      "caveats": "n48 = all routed experts on CPU",
+      "source_file": "REPORT-v4.md"
+    },
+    {
+      "id": "r4-mtp-head-hash",
+      "run": 4,
+      "type": "problem",
+      "claim": "MTP head initially mismatched prompt hash (stale third-party page); Zef renamed; verified sha256 8087dbb3…a90231 size 2786204800 B",
+      "numbers": {
+        "size_B": 2786204800
+      },
+      "caveats": "Phase C briefly skipped then un-skipped",
+      "source_file": "DECISIONS-v4.md X3/X7"
+    },
+    {
+      "id": "r4-live-already-n46",
+      "run": 4,
+      "type": "assumption",
+      "claim": "At Run 4 start, production already F n46/ub2048 (Zef applied Run 2 Option A at 11:41); tests left that config untouched",
+      "numbers": {},
+      "caveats": "Nothing applied by the overnight agent",
+      "source_file": "DECISIONS-v4.md X4"
+    },
+    {
+      "id": "r4-verdict",
+      "run": 4,
+      "type": "result",
+      "claim": "Recommend engine M + MTP n-max 2 (Option A) or M n46 no MTP (Option B); apply script written, not run",
+      "numbers": {},
+      "caveats": "llama-swap still F n46/ub2048 after finish",
+      "source_file": "REPORT-v4.md L3, L7-11, L117-132"
+    },
+    {
+      "id": "meth-overnight-unattended",
+      "run": null,
+      "type": "method",
+      "claim": "Runs driven by Claude Code unattended overnight on desktop Monster (9950X / 96 GB / RTX 5070 Ti 16 GB); HARD_STOP restore llama-swap by morning",
+      "numbers": {},
+      "caveats": "Process framing only; not a speed result",
+      "source_file": "flashnext-overnight-PROMPT.md (+ v2–v5)"
+    },
+    {
+      "id": "meth-vram-gate-13400",
+      "run": null,
+      "type": "method",
+      "claim": "Eligibility gate: peak process VRAM after full-window fill ≤ 13400 MiB (load-time VRAM is pre-filter only)",
+      "numbers": {
+        "vram_gate_MiB": 13400
+      },
+      "caveats": "Defined in v1; reused v2–v4",
+      "source_file": "flashnext-overnight-PROMPT.md §5"
+    },
+    {
+      "id": "meth-noise-rule",
+      "run": null,
+      "type": "method",
+      "claim": "Noise rule: difference < 3% or < 2× combined sd is reported as no difference",
+      "numbers": {
+        "noise_pct": 3
+      },
+      "caveats": "v1 §7; cited by later prompts",
+      "source_file": "flashnext-overnight-PROMPT.md §7"
+    },
+    {
+      "id": "meth-metric-shift-session",
+      "run": null,
+      "type": "method",
+      "claim": "From Run 2 on, primary metric is session_s (growing multi-turn chat), not synthetic T_turn — matches OpenCode growing sessions",
+      "numbers": {},
+      "caveats": "T_turn still used in Run 1 narrative",
+      "source_file": "flashnext-overnight-PROMPT-v2.md §4"
+    },
+    {
+      "id": "meth-coldstart-11",
+      "run": null,
+      "type": "method",
+      "claim": "From Run 2 on, cold-start gate = 11/11: prompt lengths {300,508,777,1016,1500,2044,3000,4061} plus prompt_B ×3, no warm-up",
+      "numbers": {
+        "cold_starts": 11
+      },
+      "caveats": "Replaced Run 1 single sanity; warm-up had masked ub crash",
+      "source_file": "flashnext-overnight-PROMPT-v2.md §3"
+    },
+    {
+      "id": "meth-iq3-accept-110",
+      "run": null,
+      "type": "method",
+      "claim": "IQ3_XXS recommend rule: pass all gates AND session_s ≤ 1.10× best Q2 (≤10% slower accepted for published precision); no local accuracy claim",
+      "numbers": {
+        "max_session_ratio": 1.1
+      },
+      "caveats": "Decision rule from prompt; Run 2 result was 1.030× but failed gate 4",
+      "source_file": "flashnext-overnight-PROMPT-v2.md §6"
+    },
+    {
+      "id": "meth-apply-policy-v2plus",
+      "run": null,
+      "type": "method",
+      "claim": "From Run 2 on, overnight agent writes apply scripts but must not apply to llama-swap; Zef decides in the morning",
+      "numbers": {},
+      "caveats": "Run 1 was allowed to apply if all gates passed (it did not)",
+      "source_file": "flashnext-overnight-PROMPT-v2.md header"
+    },
+    {
+      "id": "meth-v5-prompt-live-assert",
+      "run": 5,
+      "type": "assumption",
+      "claim": "v5 mission prompt asserts live flashnext block is already mainline abeada335 with ncmoe 48 / ub 2048 / c 262144 / temp 0.3 — not verified by a Run 5 REPORT yet",
+      "numbers": {
+        "ncmoe": 48,
+        "context": 262144
+      },
+      "caveats": "Contradicts prior do-not-claim that M+256k not applied; treat as briefing assertion until results land",
+      "source_file": "flashnext-PROMPT-v5-q2-baseline.md §0"
+    },
+    {
+      "id": "meth-v5-prompt-b2",
+      "run": 5,
+      "type": "method",
+      "claim": "v5 replaces Task 02 Prompt B with Prompt B2 adding explicit NOTIFIER-in-breaker_events rule so gate-4 failures mean real errors, not spec ambiguity",
+      "numbers": {},
+      "caveats": "Results pending; reframes v2–v4 NOTIFIER slips",
+      "source_file": "flashnext-PROMPT-v5-q2-baseline.md §2"
+    },
+    {
+      "id": "meth-task02-what",
+      "run": null,
+      "type": "method",
+      "claim": "Task 02 Gate 4: model must generate four Python files (breaker_state, call_context, breaker_events, circuit_breaker) from Prompt B in a clean-room dir; probe.py scores after copy-in",
+      "numbers": {
+        "target_files": 4
+      },
+      "caveats": "Fixture/process; prompt text not in this attachment batch",
+      "source_file": "task02.py + paper/TASK02_GATE.md"
+    },
+    {
+      "id": "meth-task02-gate4",
+      "run": null,
+      "type": "method",
+      "claim": "Gate 4 pass = probes 1, 2, 3, and 5 all PASS; probe 4 is a standing control expected to trip/FAIL",
+      "numbers": {},
+      "caveats": "Used as eligibility gate from Run 1 onward",
+      "source_file": "task02.py score() + task02_v3.py gate4"
+    },
+    {
+      "id": "meth-task02-baseline-budget",
+      "run": 1,
+      "type": "method",
+      "claim": "Task 02 baseline scored run: 58,765 predicted tokens, wall 1921.3 s, prompt_n 772, finish stop, probes 1/2/3/5 PASS — justifies max_tokens 60000 budget",
+      "numbers": {
+        "predicted_n": 58765,
+        "wall_s": 1921.3,
+        "prompt_n": 772,
+        "max_tokens_budget": 60000
+      },
+      "caveats": "Matches Run 1 REPORT void-at-16k note; not a new night’s result",
+      "source_file": "task02-baseline.json"
+    },
+    {
+      "id": "meth-task02-cleanroom",
+      "run": null,
+      "type": "method",
+      "claim": "Clean-room rule: run dir starts empty; prompt and probe.py live outside during generation; probe copied in only at score time (else contamination)",
+      "numbers": {},
+      "caveats": "From harness / task02.py docstring; same as eval-task02.sh",
+      "source_file": "task02.py docstring"
+    },
+    {
+      "id": "meth-notifier-diag-not-gate",
+      "run": null,
+      "type": "method",
+      "claim": "Diagnostic probe that also injects circuit_breaker.NOTIFIER is never the gate; many NOTIFIER NameErrors still PASS diagnostic (logic OK, placement wrong)",
+      "numbers": {},
+      "caveats": "Explains IQ3/temp-1.0 gate fails without calling models broken",
+      "source_file": "task02_v3.py diag_score()"
+    },
+    {
+      "id": "meth-iq3-speed-noise",
+      "run": 2,
+      "type": "assumption",
+      "claim": "IQ3 vs Q2 session ~3.0% is one run each and under the 3% noise floor — treat as no speed difference shown; quant choice rests on Task 02 reliability",
+      "numbers": {
+        "approx_session_delta_pct": 3.0,
+        "noise_floor_pct": 3
+      },
+      "caveats": "From public README / Opus note; do not claim IQ3 is slower",
+      "source_file": "README.md"
+    },
+    {
+      "id": "meth-256k-at-most-1p3",
+      "run": 4,
+      "type": "assumption",
+      "claim": "256k vs 128k session is at most ~1.3% slower (825.4 vs 814.9±1.9), not identical — under 3% floor but ~5 sd from 128k mean",
+      "numbers": {
+        "session_256k_s": 825.4,
+        "session_128k_s": 814.9,
+        "delta_pct": 1.3
+      },
+      "caveats": "From public README / Opus note",
+      "source_file": "README.md"
+    }
+  ],
+  "methodology_prompts": [
+    "v1",
+    "v2",
+    "v3",
+    "v4",
+    "v5"
+  ],
+  "task02_fixture": true,
+  "upstream_repo": "https://github.com/MythosHelegaras/flashnext-opt",
+  "source_paths": "All source_file paths are relative to the root of github.com/MythosHelegaras/flashnext-opt; L = line number at commit of publication."
+}
