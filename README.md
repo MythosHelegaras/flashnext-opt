@@ -70,15 +70,19 @@ Two claims are weaker than the reports' wording suggests:
 
 Task 02 pass rates (v3) are 6 runs per arm. None of the differences are significant (Fisher p = 0.23–0.55), and `REPORT-v3.md` says so.
 
-## Not in this repo
+## Task 01 and the April 2026 bakeoff
 
-`inputs/flashnext-eval-python-task02.md` cites a Task 01 eval (C#, Opus 4.8 35/36 vs flashnext Q2 34/36)
-and an April 2026 bakeoff. Only those summary scores survive. The prompts, model outputs and score
-sheets for both were not kept, so treat those figures as reported, not reproducible.
+`inputs/flashnext-eval-python-task02.md` cites a Task 01 eval (C#, Opus 35/36 vs flashnext Q2 34/36)
+and an April 2026 bakeoff. Their evidence is in `april/`: the prompt, the rubric, the judge prompt, the
+judges' rankings, the score sheets, Opus's and flashnext's Task 01 code, and a re-entrancy probe.
+`april/README.md` gives the provenance of every file.
+
+**Correction to the Task 02 write-up:** the probe shows Opus's Task 01 output has the same re-entrancy
+bug flashnext was marked down for. The 35 vs 34 comparison does not hold; see `april/scores.md`, section 4.
 
 ## License
 
-- **Code** (the `.py` and `.sh` files in the repo root): MIT, see `LICENSE`.
-- **Everything else** (reports, decision logs, results, logs, model outputs under `runs/`): CC BY 4.0, see `LICENSE-DATA`.
+- **Code** (the `.py` and `.sh` files in the repo root, and `april/probe/`): MIT, see `LICENSE`.
+- **Everything else** (reports, decision logs, results, logs, model outputs under `runs/` and `april/outputs/`): CC BY 4.0, see `LICENSE-DATA`.
 - **Third-party text** keeps its own license: `corpus/` holds excerpts of llama.cpp source and docs (MIT, © the ggml authors),
   and `logs/v4/*-help.txt` is llama-server's own `--help` output.
