@@ -1,0 +1,8 @@
+PROBE 1 (crit 13): counts [1, 2, 3] | breaker_opened fired 1 -> PASS
+PROBE 2 (success re-entry): count 2 -> 1 -> PASS (nested failure survived)
+PROBE 3 (opened re-entry): fired 1 -> PASS
+PROBE 4 (threshold=0):      tripped on first failure -> crit 7 FAIL
+
+PROBE 4 (threshold=-1):      tripped on first failure -> crit 7 FAIL
+
+PROBE 5 (domain rule): [(<BreakerState.HALF_OPEN: 3>, True)] -> PASS

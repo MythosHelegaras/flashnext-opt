@@ -1,0 +1,51 @@
+{
+  "phase": "8-finish",
+  "status": "COMPLETE",
+  "verdict": "NO CHANGE",
+  "started": "2026-09-28T23:37",
+  "finished": "2026-09-29T04:26:16",
+  "config_touched": false,
+  "config_mtime": "2026-09-28 23:28:27",
+  "baseline": {
+    "spec": "-ncmoe 42 -t 16 -b 2048 -ub 512 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0",
+    "T_turn_s": 168.94,
+    "D0": 36.373,
+    "D32k": 29.863,
+    "FULL_peak_mib": 13020
+  },
+  "best_candidate_blocked": {
+    "spec": "-ncmoe 46 -t 16 -b 2048 -ub 2048 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0",
+    "T_turn_s": 110.55,
+    "delta_pct": -34.6,
+    "FULL_peak_mib": 12484,
+    "blocked_by": "CUDA illegal memory access on prompt_B as first request; any -ub>512"
+  },
+  "gates": {
+    "vram": "pass",
+    "context": "pass",
+    "speed": "pass",
+    "sanity": "FAIL (server abort)",
+    "accuracy": "n/a (KV unchanged)"
+  },
+  "phases_done": [
+    "0 preflight",
+    "A baseline",
+    "B ub/ncmoe/ctx/threads",
+    "C KV fidelity",
+    "D load mode",
+    "E prefix reuse",
+    "F sanity + crash isolation",
+    "8 finish"
+  ],
+  "artifacts": [
+    "REPORT.md",
+    "DECISIONS.md",
+    "results.jsonl",
+    "apply-flashnext.sh (NOT run)",
+    "harness.py",
+    "kvfidelity.py",
+    "task02.py",
+    "crashtest{,2,3,4,5}.json",
+    "swap_needle.json"
+  ]
+}

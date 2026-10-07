@@ -1,0 +1,17 @@
+{
+  "label": "baseline",
+  "wall_s": 1921.3,
+  "finish_reason": "stop",
+  "content_len": 7387,
+  "reasoning_len": 253180,
+  "prompt_n": 772,
+  "predicted_n": 58765,
+  "predicted_ps": 30.637945321452097,
+  "files_found": [
+    "breaker_events.py",
+    "breaker_state.py",
+    "call_context.py",
+    "circuit_breaker.py"
+  ],
+  "files_missing": []
+}

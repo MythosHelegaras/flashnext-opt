@@ -1,0 +1,56 @@
+{
+  "label": "v3-q2-t10-r2",
+  "request_sampling": {
+    "temperature": 1.0,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0.0,
+    "seed": 20261006
+  },
+  "slots": {
+    "during": {
+      "temperature": 1.0,
+      "top_p": 0.949999988079071,
+      "top_k": 20,
+      "min_p": 0.0,
+      "seed": 20261006,
+      "is_processing": true
+    },
+    "after": {
+      "temperature": 1.0,
+      "top_p": 0.949999988079071,
+      "top_k": 20,
+      "min_p": 0.0,
+      "seed": 20261006,
+      "is_processing": false
+    },
+    "mismatch": null
+  },
+  "sampling_ok": true,
+  "wall_s": 1528.9,
+  "finish_reason": "stop",
+  "content_len": 12390,
+  "reasoning_len": 202566,
+  "prompt_n": 772,
+  "predicted_n": 47456,
+  "predicted_ps": 31.093060145865167,
+  "prompt_ms": 2658.363,
+  "predicted_ms": 1526224.816,
+  "reasoning_tok": 44696,
+  "content_tok": 2757,
+  "usage": {
+    "completion_tokens": 47456,
+    "prompt_tokens": 772,
+    "total_tokens": 48228,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "files_found": [
+    "breaker_events.py",
+    "breaker_state.py",
+    "call_context.py",
+    "circuit_breaker.py"
+  ],
+  "files_missing": []
+}

@@ -1,0 +1,18 @@
+
+===== [04:09:31] T6-ub512-n42-small  (~300 < ub512)
+  OK prompt_n=325
+
+===== [04:09:54] T7-ub1024-n43-772  (772 < ub1024)
+  CRASH cuda_illegal=True
+
+===== [04:10:10] T8-ub1024-n43-small  (~300 < ub1024)
+  OK prompt_n=325
+
+===== [04:10:33] T9-ub2048-n46-small  (~300 < ub2048)
+  OK prompt_n=325
+
+CRASHTEST2 DONE
+  T6-ub512-n42-small     ~300 < ub512     -> OK
+  T7-ub1024-n43-772      772 < ub1024     -> CRASH
+  T8-ub1024-n43-small    ~300 < ub1024    -> OK
+  T9-ub2048-n46-small    ~300 < ub2048    -> OK

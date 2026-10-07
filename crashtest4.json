@@ -1,0 +1,26 @@
+{
+  "V-src-600": {
+    "ok": true,
+    "prompt_n": 650
+  },
+  "V-src-700": {
+    "ok": true,
+    "prompt_n": 751
+  },
+  "V-src-772": {
+    "ok": true,
+    "prompt_n": 823
+  },
+  "V-src-800": {
+    "ok": true,
+    "prompt_n": 849
+  },
+  "V-src-900": {
+    "ok": true,
+    "prompt_n": 951
+  },
+  "V-promptB": {
+    "ok": false,
+    "cuda": true
+  }
+}

@@ -1,0 +1,13 @@
+{"item": "300", "target": 300, "templated_n": 300, "kind": "prose", "load_vram_mib": 9996, "mem_avail_kb": 90407412, "prompt_n": 300, "finish_reason": "stop", "predicted_n": 293, "alive_after": true, "crash": null, "ok": true}
+{"item": "508", "target": 508, "templated_n": 508, "kind": "source", "load_vram_mib": 9996, "mem_avail_kb": 90393936, "prompt_n": 508, "finish_reason": "length", "predicted_n": 300, "alive_after": true, "crash": null, "ok": true}
+{"item": "777", "target": 777, "templated_n": 777, "kind": "prose", "load_vram_mib": 9996, "mem_avail_kb": 90381512, "prompt_n": 777, "finish_reason": "stop", "predicted_n": 289, "alive_after": true, "crash": null, "ok": true}
+{"item": "1016", "target": 1016, "templated_n": 1016, "kind": "source", "load_vram_mib": 9996, "mem_avail_kb": 90432596, "prompt_n": 1016, "finish_reason": "length", "predicted_n": 300, "alive_after": true, "crash": null, "ok": true}
+{"item": "1500", "target": 1500, "templated_n": 1500, "kind": "prose", "load_vram_mib": 9996, "mem_avail_kb": 90386424, "prompt_n": 1500, "finish_reason": "length", "predicted_n": 300, "alive_after": true, "crash": null, "ok": true}
+{"item": "2044", "target": 2044, "templated_n": 2044, "kind": "source", "load_vram_mib": 9996, "mem_avail_kb": 90427004, "prompt_n": 2044, "finish_reason": "length", "predicted_n": 300, "alive_after": true, "crash": null, "ok": true}
+{"item": "3000", "target": 3000, "templated_n": 3000, "kind": "prose", "load_vram_mib": 9996, "mem_avail_kb": 90410468, "prompt_n": 3000, "finish_reason": "length", "predicted_n": 300, "alive_after": true, "crash": null, "ok": true}
+{"item": "4061", "target": 4061, "templated_n": 4061, "kind": "source", "load_vram_mib": 9996, "mem_avail_kb": 90376880, "prompt_n": 4061, "finish_reason": "length", "predicted_n": 300, "alive_after": true, "crash": null, "ok": true}
+{"item": "B1", "target": null, "templated_n": 772, "kind": "prompt_B", "load_vram_mib": 9996, "mem_avail_kb": 90461652, "prompt_n": 772, "finish_reason": "length", "predicted_n": 300, "alive_after": true, "crash": null, "ok": true}
+{"item": "B2", "target": null, "templated_n": 772, "kind": "prompt_B", "load_vram_mib": 9996, "mem_avail_kb": 90450108, "prompt_n": 772, "finish_reason": "length", "predicted_n": 300, "alive_after": true, "crash": null, "ok": true}
+{"item": "B3", "target": null, "templated_n": 772, "kind": "prompt_B", "load_vram_mib": 9996, "mem_avail_kb": 90414752, "prompt_n": 772, "finish_reason": "length", "predicted_n": 300, "alive_after": true, "crash": null, "ok": true}
+COLD v4-B2-M-n46-coldset: 11/11
+PHASE B2b DONE Tue Oct  6 01:06:42 PM CST 2026

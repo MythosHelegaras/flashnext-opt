@@ -1,0 +1,15 @@
+loaded 12590 MiB; full prompt going in
+{
+  "FULL_prompt_n": 120182,
+  "FULL_prefill_ps": 210.58165325770264,
+  "FULL_TTFT_s": 570.7144860000001,
+  "FULL_decode_ps": 18.8095157612838,
+  "peak_vram_mib": 13020,
+  "retrieved": {
+    "early": "1000003",
+    "mid": "1337774",
+    "late": "1675545"
+  },
+  "needles_ok": true,
+  "finish_ok": true
+}

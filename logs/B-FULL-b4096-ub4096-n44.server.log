@@ -1,0 +1,42 @@
+0.00.161.167 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.161.436 W srv  llama_server: -----------------
+0.00.161.437 W srv  llama_server: CORS is set to allow all origins ('*') and no API key is set
+0.00.161.437 W srv  llama_server: this can be a security risk (cross-origin attacks)
+0.00.161.437 W srv  llama_server: more info: https://github.com/ggml-org/llama.cpp/pull/25655
+0.00.161.437 W srv  llama_server: -----------------
+0.00.162.663 I srv    load_model: loading model '/mnt/ai/llm/models/qwen3.8-flash-next/UD-Q2_K_XL/Qwen3.8-Flash-Next-UD-Q2_K_XL-00001-of-00003.gguf'
+0.00.860.618 W llama_model_loader: tensor overrides to CPU are used with mmap enabled - consider using --load-mode none for better performance
+0.02.898.080 W llama_kv_cache: attention rotation force disabled (LLAMA_ATTN_ROT_DISABLE)
+0.02.899.492 W llama_kv_cache: attention rotation force disabled (LLAMA_ATTN_ROT_DISABLE)
+0.03.040.399 I cmn          init: llama threadpool init, n_threads = 16
+0.03.189.529 I srv    load_model: initializing, n_slots = 1, n_ctx_slot = 131072, kv_unified = 'false'
+0.03.192.314 I srv          init: chat template supports preserving reasoning, consider enabling it via --reasoning-preserve
+0.03.192.343 I srv  llama_server: model loaded
+0.03.192.347 I srv  llama_server: listening on http://127.0.0.1:9997
+0.06.982.045 I slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = -1
+0.06.982.096 I slot launch_slot_: id  0 | task 0 | processing task, is_child = 0
+0.12.415.722 I slot print_timing: id  0 | task 0 | prompt processing, n_tokens =   4054, progress = 1.00, t =   5.43 s / 746.10 tokens per second
+0.13.453.952 I slot print_timing: id  0 | task 0 | prompt eval time =    5571.01 ms /  4058 tokens (    1.37 ms per token,   728.41 tokens per second)
+0.13.453.956 I slot print_timing: id  0 | task 0 |        eval time =     900.81 ms /    32 tokens (   29.06 ms per token,    34.41 tokens per second)
+0.13.453.956 I slot print_timing: id  0 | task 0 |       total time =    6471.82 ms /  4090 tokens
+0.13.453.959 I slot print_timing: id  0 | task 0 |    graphs reused =          0
+0.13.454.079 I slot      release: id  0 | task 0 | stop processing: n_tokens = 4089, truncated = 0
+0.13.522.513 I slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = 286862352470
+0.13.601.207 I slot launch_slot_: id  0 | task 35 | processing task, is_child = 0
+0.18.922.313 I slot print_timing: id  0 | task 35 | prompt processing, n_tokens =   4138, progress = 0.03, t =   5.32 s / 777.66 tokens per second
+0.24.189.027 I slot print_timing: id  0 | task 35 | prompt processing, n_tokens =   8234, progress = 0.07, t =  10.59 s / 777.69 tokens per second
+0.29.852.277 I slot print_timing: id  0 | task 35 | prompt processing, n_tokens =  12330, progress = 0.10, t =  16.25 s / 758.72 tokens per second
+0.36.081.193 I slot print_timing: id  0 | task 35 | prompt processing, n_tokens =  16426, progress = 0.14, t =  22.48 s / 730.70 tokens per second
+0.42.700.232 I slot print_timing: id  0 | task 35 | prompt processing, n_tokens =  20522, progress = 0.17, t =  29.10 s / 705.25 tokens per second
+0.49.612.631 I slot print_timing: id  0 | task 35 | prompt processing, n_tokens =  24618, progress = 0.20, t =  36.01 s / 683.62 tokens per second
+0.57.325.651 I slot print_timing: id  0 | task 35 | prompt processing, n_tokens =  28714, progress = 0.24, t =  43.72 s / 656.70 tokens per second
+1.05.117.345 I slot print_timing: id  0 | task 35 | prompt processing, n_tokens =  32810, progress = 0.27, t =  51.52 s / 636.89 tokens per second
+1.13.151.576 I slot print_timing: id  0 | task 35 | prompt processing, n_tokens =  36906, progress = 0.31, t =  59.55 s / 619.74 tokens per second
+1.21.496.494 I slot print_timing: id  0 | task 35 | prompt processing, n_tokens =  41002, progress = 0.34, t =  67.90 s / 603.90 tokens per second
+1.30.515.441 I slot print_timing: id  0 | task 35 | prompt processing, n_tokens =  45098, progress = 0.38, t =  76.91 s / 586.34 tokens per second
+1.39.529.807 I slot print_timing: id  0 | task 35 | prompt processing, n_tokens =  49194, progress = 0.41, t =  85.93 s / 572.50 tokens per second
+1.48.905.916 I slot print_timing: id  0 | task 35 | prompt processing, n_tokens =  53290, progress = 0.44, t =  95.30 s / 559.15 tokens per second
+1.58.543.472 I slot print_timing: id  0 | task 35 | prompt processing, n_tokens =  57386, progress = 0.48, t = 104.94 s / 546.83 tokens per second
+2.09.093.185 I slot print_timing: id  0 | task 35 | prompt processing, n_tokens =  61482, progress = 0.51, t = 115.49 s / 532.35 tokens per second
+2.09.232.453 E ggml_backend_cuda_buffer_type_alloc_buffer: allocating 5309.56 MiB on device 0: cudaMalloc failed: out of memory
+2.09.232.459 E ggml_gallocr_reserve_n_impl: failed to allocate CUDA0 buffer of size 5567480192

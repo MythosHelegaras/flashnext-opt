@@ -1,0 +1,29 @@
+
+===== [01:07:20] B-probe-b2048-ub2048-n46  -ncmoe 46 -t 16 -b 2048 -ub 2048 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0
+loaded 9558 MiB; prefill probe
+{
+  "load_vram_mib": 9558,
+  "peak_vram_mib": 12464,
+  "completed": true,
+  "reached": 120056,
+  "max_tokens_seen": 120052,
+  "oom_alloc_mib": null,
+  "FULL_prefill_ps": 343.08826505448866
+}
+  -> b2048/ub2048 n46: completed=True peak=12464 reached=120052 oom_alloc=None => PASS
+
+===== [01:13:33] B-probe-b4096-ub4096-n48  -ncmoe 48 -t 16 -b 4096 -ub 4096 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0
+loaded 8956 MiB; prefill probe
+{
+  "load_vram_mib": 8956,
+  "peak_vram_mib": 14716,
+  "completed": true,
+  "reached": 120056,
+  "max_tokens_seen": 120052,
+  "oom_alloc_mib": null,
+  "FULL_prefill_ps": 382.0638500055055
+}
+  -> b4096/ub4096 n48: completed=True peak=14716 reached=120052 oom_alloc=None => fail
+
+===== [01:19:14] B-probe-b4096-ub4096-n50  -ncmoe 50 -t 16 -b 4096 -ub 4096 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0
+loaded 8956 MiB; prefill probe

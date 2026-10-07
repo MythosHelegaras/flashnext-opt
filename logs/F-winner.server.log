@@ -1,0 +1,106 @@
+0.00.103.445 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.103.700 W srv  llama_server: -----------------
+0.00.103.701 W srv  llama_server: CORS is set to allow all origins ('*') and no API key is set
+0.00.103.701 W srv  llama_server: this can be a security risk (cross-origin attacks)
+0.00.103.701 W srv  llama_server: more info: https://github.com/ggml-org/llama.cpp/pull/25655
+0.00.103.701 W srv  llama_server: -----------------
+0.00.104.937 I srv    load_model: loading model '/mnt/ai/llm/models/qwen3.8-flash-next/UD-Q2_K_XL/Qwen3.8-Flash-Next-UD-Q2_K_XL-00001-of-00003.gguf'
+0.00.708.740 W llama_model_loader: tensor overrides to CPU are used with mmap enabled - consider using --load-mode none for better performance
+0.01.710.290 W llama_kv_cache: attention rotation force disabled (LLAMA_ATTN_ROT_DISABLE)
+0.01.711.795 W llama_kv_cache: attention rotation force disabled (LLAMA_ATTN_ROT_DISABLE)
+0.01.794.200 I cmn          init: llama threadpool init, n_threads = 16
+0.01.938.705 I srv    load_model: initializing, n_slots = 1, n_ctx_slot = 131072, kv_unified = 'false'
+0.01.941.495 I srv          init: chat template supports preserving reasoning, consider enabling it via --reasoning-preserve
+0.01.941.525 I srv  llama_server: model loaded
+0.01.941.529 I srv  llama_server: listening on http://127.0.0.1:9997
+0.07.028.713 I slot get_availabl: id  0 | task -1 | selected slot by LRU, t_last = -1
+0.07.028.760 I slot launch_slot_: id  0 | task 0 | processing task, is_child = 0
+0.07.707.818 E CUDA error: an illegal memory access was encountered
+0.07.707.821 E   current device: 0, in function ggml_backend_cuda_synchronize at /opt/llama.cpp-qwen4exp/ggml/src/ggml-cuda/ggml-cuda.cu:2537
+0.07.707.821 E   cudaStreamSynchronize(cuda_ctx->stream())
+/opt/llama.cpp-qwen4exp/ggml/src/ggml-cuda/ggml-cuda.cu:107: CUDA error
+[New LWP 390430]
+[New LWP 390429]
+[New LWP 390428]
+[New LWP 390427]
+[New LWP 390426]
+[New LWP 390425]
+[New LWP 390424]
+[New LWP 390423]
+[New LWP 390422]
+[New LWP 390421]
+[New LWP 390420]
+[New LWP 390419]
+[New LWP 390418]
+[New LWP 390417]
+[New LWP 390416]
+[New LWP 390415]
+[New LWP 390399]
+[New LWP 390397]
+[New LWP 390396]
+[New LWP 390395]
+[New LWP 390394]
+[New LWP 390393]
+[New LWP 390392]
+[New LWP 390391]
+[New LWP 390390]
+[New LWP 390389]
+[New LWP 390388]
+[New LWP 390387]
+[New LWP 390386]
+[New LWP 390385]
+[New LWP 390384]
+[New LWP 390383]
+[New LWP 390382]
+[New LWP 390381]
+[New LWP 390380]
+[New LWP 390379]
+[New LWP 390378]
+[New LWP 390377]
+[New LWP 390376]
+[New LWP 390375]
+[New LWP 390374]
+[New LWP 390373]
+[New LWP 390372]
+[New LWP 390371]
+[New LWP 390370]
+[New LWP 390369]
+[New LWP 390368]
+[New LWP 390367]
+[New LWP 390366]
+[New LWP 390365]
+[New LWP 390361]
+[New LWP 390360]
+[New LWP 390359]
+
+This GDB supports auto-downloading debuginfo from the following URLs:
+  <https://debuginfod.cachyos.org>
+  <https://debuginfod.archlinux.org>
+Enable debuginfod for this session? (y or [n]) [answered N; input not from terminal]
+Debuginfod has been disabled.
+To make this setting permanent, add 'set debuginfod enabled off' to .gdbinit.
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/usr/lib/libthread_db.so.1".
+0x00007facce4b61f2 in ?? () from /usr/lib/libc.so.6
+#0  0x00007facce4b61f2 in ?? () from /usr/lib/libc.so.6
+#1  0x00007facce52ead2 in wait4 () from /usr/lib/libc.so.6
+#2  0x00007facdae8887b in ggml_print_backtrace () from /opt/llama.cpp-qwen4exp/build/bin/libggml-base.so.0
+#3  0x00007facdae88a0e in ggml_abort () from /opt/llama.cpp-qwen4exp/build/bin/libggml-base.so.0
+#4  0x00007facd627c6d1 in ggml_cuda_error(char const*, char const*, char const*, int, char const*) () from /opt/llama.cpp-qwen4exp/build/bin/libggml-cuda.so.0
+#5  0x00007facd62840a8 in ggml_backend_cuda_synchronize(ggml_backend*) () from /opt/llama.cpp-qwen4exp/build/bin/libggml-cuda.so.0
+#6  0x00007facdaea6fc5 in ggml_backend_sched_graph_compute_async () from /opt/llama.cpp-qwen4exp/build/bin/libggml-base.so.0
+#7  0x00007facd9cf7560 in llama_context::graph_compute(ggml_cgraph*, bool) () from /opt/llama.cpp-qwen4exp/build/bin/libllama.so.0
+#8  0x00007facd9cfbb3c in llama_context::process_ubatch(llama_ubatch const&, llm_graph_type, llama_memory_context_i*, ggml_status&) () from /opt/llama.cpp-qwen4exp/build/bin/libllama.so.0
+#9  0x00007facd9d005cd in llama_context::decode(llama_batch const&) () from /opt/llama.cpp-qwen4exp/build/bin/libllama.so.0
+#10 0x00007facd9d020ee in llama_decode () from /opt/llama.cpp-qwen4exp/build/bin/libllama.so.0
+#11 0x00007facda95dda5 in std::_Function_handler<void (), server_context_impl::decode(int&, int, llama_batch&)::{lambda()#1}>::_M_invoke(std::_Any_data const&) () from /opt/llama.cpp-qwen4exp/build/bin/libllama-server-impl.so
+#12 0x00007facda916095 in server_queue::yield_to_queue(std::function<void ()>&&) () from /opt/llama.cpp-qwen4exp/build/bin/libllama-server-impl.so
+#13 0x00007facda977c2e in server_context_impl::decode(int&, int, llama_batch&) () from /opt/llama.cpp-qwen4exp/build/bin/libllama-server-impl.so
+#14 0x00007facda97962d in server_context_impl::update_slots() () from /opt/llama.cpp-qwen4exp/build/bin/libllama-server-impl.so
+#15 0x00007facda916bf8 in server_queue::start_loop(long) () from /opt/llama.cpp-qwen4exp/build/bin/libllama-server-impl.so
+#16 0x00007facda8cdcfa in llama_server(common_params&, int, char**) () from /opt/llama.cpp-qwen4exp/build/bin/libllama-server-impl.so
+#17 0x00007facda8cfa51 in llama_server(int, char**) () from /opt/llama.cpp-qwen4exp/build/bin/libllama-server-impl.so
+#18 0x00007facce427c8e in ?? () from /usr/lib/libc.so.6
+#19 0x00007facce427dcb in __libc_start_main () from /usr/lib/libc.so.6
+#20 0x000055af8ad5e075 in _start ()
+[Inferior 1 (process 390357) detached]

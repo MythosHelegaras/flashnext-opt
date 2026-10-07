@@ -1,0 +1,20 @@
+{
+  "via": "llama-swap:9292",
+  "wall_s": 581.0,
+  "finish_reason": "stop",
+  "prompt_n": 120134,
+  "prefill_ps": 211.10020749055454,
+  "TTFT_s": 569.09,
+  "decode_ps": 19.717079540320615,
+  "expected": {
+    "early": "1000003",
+    "mid": "1337774",
+    "late": "1675545"
+  },
+  "retrieved": {
+    "early": "1000003",
+    "mid": "1337774",
+    "late": "1675545"
+  },
+  "needles_ok": true
+}

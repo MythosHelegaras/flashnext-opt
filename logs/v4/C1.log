@@ -1,0 +1,47 @@
+loaded 4s vram 14482 MemAvail 87111 MiB rss {'VmRSS': 31143220, 'RssAnon': 587068, 'RssFile': 28945348, 'RssShmem': 1610804}
+{"D0": {"D0_ps": 36.244, "D0_sd": 1.242, "D0_predicted_n": [1400, 1400, 1400]}, "probe_finish": "length", "probe_tok": 500}
+---- probe content ----
+```python
+def merge_intervals(intervals):
+    """Merge overlapping closed intervals and return them sorted.
+
+    >>> merge_intervals([(1, 3), (2, 4), (5, 6)])
+    [(1, 4), (5, 6)]
+    >>> merge_intervals([(5, 6), (1, 3), (2, 4)])
+    [(1, 4), (5, 6)]
+    """
+    if not intervals:
+        return []
+
+    merged = []
+    for start, end in sorted(intervals):
+        if not merged or start > merged[-1][1]:
+            merged.append([start, end])
+        else:
+            merged[-1][1] = max(merged[-1][1], end)
+
+    return
+loaded 4s vram 12732 MemAvail 87131 MiB rss {'VmRSS': 32968776, 'RssAnon': 585816, 'RssFile': 30772156, 'RssShmem': 1610804}
+{"D0": {"D0_ps": 34.296, "D0_sd": 0.945, "D0_predicted_n": [1400, 1400, 1400]}, "probe_finish": "length", "probe_tok": 500}
+---- probe content ----
+```python
+def merge_intervals(intervals):
+    """Merge overlapping closed intervals and return them sorted.
+
+    >>> merge_intervals([(1, 3), (2, 4), (5, 6)])
+    [(1, 4), (5, 6)]
+    >>> merge_intervals([(5, 6), (1, 3), (2, 4)])
+    [(1, 4), (5, 6)]
+    """
+    if not intervals:
+        return []
+
+    merged = []
+    for start, end in sorted(intervals):
+        if not merged or start > merged[-1][1]:
+            merged.append([start, end])
+        else:
+            merged[-1][1] = max(merged[-1][1], end)
+
+    return
+PHASE C1 DONE Tue Oct  6 01:29:56 PM CST 2026

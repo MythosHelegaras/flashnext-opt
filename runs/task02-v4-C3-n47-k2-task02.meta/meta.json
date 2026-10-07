@@ -1,0 +1,55 @@
+{
+  "label": "v4-C3-n47-k2-task02",
+  "request_sampling": {
+    "temperature": 0.3,
+    "top_p": 0.95,
+    "top_k": 20,
+    "seed": 20260929
+  },
+  "slots": {
+    "during": {
+      "temperature": 0.30000001192092896,
+      "top_p": 0.949999988079071,
+      "top_k": 20,
+      "min_p": 0.05000000074505806,
+      "seed": 20260929,
+      "is_processing": true
+    },
+    "after": {
+      "temperature": 0.30000001192092896,
+      "top_p": 0.949999988079071,
+      "top_k": 20,
+      "min_p": 0.05000000074505806,
+      "seed": 20260929,
+      "is_processing": false
+    },
+    "mismatch": null
+  },
+  "sampling_ok": true,
+  "wall_s": 1329.3,
+  "finish_reason": "stop",
+  "content_len": 8348,
+  "reasoning_len": 214434,
+  "prompt_n": 772,
+  "predicted_n": 49744,
+  "predicted_ps": 37.50248190163155,
+  "prompt_ms": 2874.49,
+  "predicted_ms": 1326392.214,
+  "reasoning_tok": 47882,
+  "content_tok": 1859,
+  "usage": {
+    "completion_tokens": 49744,
+    "prompt_tokens": 772,
+    "total_tokens": 50516,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "files_found": [
+    "breaker_events.py",
+    "breaker_state.py",
+    "call_context.py",
+    "circuit_breaker.py"
+  ],
+  "files_missing": []
+}

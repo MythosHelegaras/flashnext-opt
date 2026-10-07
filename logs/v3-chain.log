@@ -1,0 +1,27 @@
+>> 17:03:59 v3-q2-t10-r1 model=q2 temp=1.0 seed=20261005 attempt=1
+v2 tokens: {"task02-v2-F-q2-n46-ub2048": {"reasoning_tok": 53142, "content_tok": 1941, "predicted_n": 55086, "predicted_ps": 29.91281847827851, "wall_s": 1844.2, "finish_reason": "stop", "notifier": "bound in NONE; annotation-only in breaker_events; read: circuit_breaker\u2192breaker_events.NOTIFIER"}, "task02-v2-F2-q2-n46-ub2048": {"reasoning_tok": 32335, "content_tok": 1589, "predicted_n": 33928, "predicted_ps": 32.13678933112852, "wall_s": 1058.4, "finish_reason": "stop", "notifier": "bound in NONE; annotation-only in breaker_events; read: circuit_breaker\u2192breaker_events.NOTIFIER"}, "task02-v2-F-iq3-n46-ub2048": {"reasoning_tok": 34149, "content_tok": 1654, "predicted_n": 35806, "predicted_ps": 30.861372504934636, "wall_s": 1162.7, "finish_reason": "stop", "notifier": "bound in NONE; annotation-only in circuit_breaker; read: circuit_breaker(bare)"}, "task02-v2-F2-iq3-n46-ub2048": {"reasoning_tok": 46480, "content_tok": 1738, "predicted_n": 48221, "predicted_ps": 29.69515543393343, "wall_s": 1645.3, "finish_reason": "stop", "notifier": "bound in NONE; annotation-only in breaker_events; read: circuit_breaker\u2192breaker_events.NOTIFIER"}}
+== v3-q2-t10-r1 SCORED gate4=True {"finish_reason": "stop", "predicted_n": 37915, "reasoning_tok": 35553, "content_tok": 2359, "wall_s": 1186.5, "predicted_ps": 32.02696369958732} | bound in breaker_events; read: circuit_breaker→breaker_events.NOTIFIER
+>> 17:23:59 v3-q2-t10-r2 model=q2 temp=1.0 seed=20261006 attempt=1
+== v3-q2-t10-r2 SCORED gate4=True {"finish_reason": "stop", "predicted_n": 47456, "reasoning_tok": 44696, "content_tok": 2757, "wall_s": 1528.9, "predicted_ps": 31.093060145865167} | bound in NONE; annotation-only in breaker_events,circuit_breaker; read: circuit_breaker→getattr(_breaker_events, 'NOTIFIER', None)
+>> 17:49:41 v3-q2-t10-r3 model=q2 temp=1.0 seed=20261007 attempt=1
+== v3-q2-t10-r3 SCORED gate4=False {"finish_reason": "stop", "predicted_n": 32193, "reasoning_tok": 29816, "content_tok": 2374, "wall_s": 992.5, "predicted_ps": 32.52012500440267} | bound in NONE; read: NONE
+>> 18:06:27 v3-iq3-t10-r1 model=iq3 temp=1.0 seed=20261008 attempt=1
+== v3-iq3-t10-r1 SCORED gate4=False {"finish_reason": "stop", "predicted_n": 35000, "reasoning_tok": 32775, "content_tok": 2222, "wall_s": 1187.1, "predicted_ps": 30.73491667937438} | bound in NONE; annotation-only in circuit_breaker; read: circuit_breaker(bare)
+>> 18:26:47 v3-iq3-t10-r2 model=iq3 temp=1.0 seed=20261009 attempt=1
+== v3-iq3-t10-r2 SCORED gate4=False {"finish_reason": "stop", "predicted_n": 38116, "reasoning_tok": 36360, "content_tok": 1752, "wall_s": 1236.6, "predicted_ps": 30.88372416651829} | bound in NONE; annotation-only in circuit_breaker; read: circuit_breaker(bare)
+>> 18:47:37 v3-iq3-t10-r3 model=iq3 temp=1.0 seed=20261010 attempt=1
+== v3-iq3-t10-r3 VOID_LENGTH gate4=None {"finish_reason": "length", "predicted_n": 60000, "reasoning_tok": 58086, "content_tok": 1912, "wall_s": 2077.8, "predicted_ps": 28.913010965142913} | bound in NONE; annotation-only in breaker_events; read: NONE
+>> 19:22:28 v3-iq3-t10-r3 model=iq3 temp=1.0 seed=20261011 attempt=2
+== v3-iq3-t10-r3-rerun SCORED gate4=True {"finish_reason": "stop", "predicted_n": 36161, "reasoning_tok": 34138, "content_tok": 2021, "wall_s": 1163.7, "predicted_ps": 31.13945858195384} | bound in NONE; annotation-only in breaker_events; read: circuit_breaker→breaker_events.NOTIFIER
+>> 19:42:04 v3-iq3-t03-r3 model=iq3 temp=0.3 seed=20260929 attempt=1
+== v3-iq3-t03-r3 VOID_LENGTH gate4=None {"finish_reason": "length", "predicted_n": 60000, "reasoning_tok": 60000, "content_tok": 0, "wall_s": 2076.8, "predicted_ps": 28.924495400116026} | bound in NONE; read: NONE
+>> 20:16:54 v3-iq3-t03-r3 model=iq3 temp=0.3 seed=20260929 attempt=2
+== v3-iq3-t03-r3-rerun SCORED gate4=True {"finish_reason": "stop", "predicted_n": 51246, "reasoning_tok": 49484, "content_tok": 1758, "wall_s": 1730.7, "predicted_ps": 29.651758156517914} | bound in NONE; annotation-only in breaker_events; read: circuit_breaker→breaker_events.NOTIFIER
+>> 20:45:58 v3-iq3-t03-r4 model=iq3 temp=0.3 seed=20260929 attempt=1
+== v3-iq3-t03-r4 VOID_LENGTH gate4=None {"finish_reason": "length", "predicted_n": 60000, "reasoning_tok": 59999, "content_tok": 0, "wall_s": 2106.3, "predicted_ps": 28.52102982226075} | bound in NONE; read: NONE
+>> 21:21:18 v3-iq3-t03-r4 model=iq3 temp=0.3 seed=20260929 attempt=2
+== v3-iq3-t03-r4-rerun VOID_LENGTH gate4=None {"finish_reason": "length", "predicted_n": 60000, "reasoning_tok": 59998, "content_tok": 0, "wall_s": 2095.0, "predicted_ps": 28.67321232056378} | bound in NONE; read: NONE
+>> 21:56:26 v3-q2-t03-r3 model=q2 temp=0.3 seed=20260929 attempt=1
+== v3-q2-t03-r3 SCORED gate4=True {"finish_reason": "stop", "predicted_n": 44595, "reasoning_tok": 42470, "content_tok": 2122, "wall_s": 1658.3, "predicted_ps": 26.933396022422148} | bound in NONE; annotation-only in breaker_events; read: circuit_breaker→breaker_events.NOTIFIER
+TIME: not starting v3-q2-t03-r4 (would end after 22:45)
+CHAIN_DONE

@@ -1,0 +1,44 @@
+general.architecture qwen4exp
+qwen4exp.block_count 49
+qwen4exp.context_length 262144
+qwen4exp.embedding_length 2560
+qwen4exp.expert_count 512
+qwen4exp.expert_used_count 10
+qwen4exp.expert_feed_forward_length 640
+qwen4exp.expert_shared_feed_forward_length 640
+qwen4exp.nextn_predict_layers 1
+output.weight                                      Q6_K         497.3 MiB [np.uint64(2560), np.uint64(248320)]
+token_embd.weight                                  Q4_K         341.0 MiB [np.uint64(2560), np.uint64(248320)]
+blk.48.attn_k.weight                               Q4_K           0.7 MiB [np.uint64(2560), np.uint64(512)]
+blk.48.attn_k_norm.weight                          F32            0.0 MiB [np.uint64(256)]
+blk.48.attn_output.weight                          Q4_K           8.4 MiB [np.uint64(6144), np.uint64(2560)]
+blk.48.attn_q.weight                               Q4_K          16.9 MiB [np.uint64(2560), np.uint64(12288)]
+blk.48.attn_q_norm.weight                          F32            0.0 MiB [np.uint64(256)]
+blk.48.attn_v.weight                               Q6_K           1.0 MiB [np.uint64(2560), np.uint64(512)]
+blk.48.ffn_down_exps.weight                        Q8_0         850.0 MiB [np.uint64(640), np.uint64(2560), np.uint64(512)]
+blk.48.ffn_down_shexp.weight                       Q8_0           1.7 MiB [np.uint64(640), np.uint64(2560)]
+blk.48.ffn_gate_exps.weight                        Q4_K         450.0 MiB [np.uint64(2560), np.uint64(640), np.uint64(512)]
+blk.48.ffn_gate_inp.weight                         F32            5.0 MiB [np.uint64(2560), np.uint64(512)]
+blk.48.ffn_gate_inp_shexp.weight                   F32            0.0 MiB [np.uint64(2560)]
+blk.48.ffn_gate_shexp.weight                       Q4_K           0.9 MiB [np.uint64(2560), np.uint64(640)]
+blk.48.ffn_up_exps.weight                          Q4_K         450.0 MiB [np.uint64(2560), np.uint64(640), np.uint64(512)]
+blk.48.ffn_up_shexp.weight                         Q4_K           0.9 MiB [np.uint64(2560), np.uint64(640)]
+blk.48.hc_attn_down.weight                         Q4_K           1.8 MiB [np.uint64(10240), np.uint64(320)]
+blk.48.hc_attn_inject.weight                       Q4_K           0.0 MiB [np.uint64(10240), np.uint64(4)]
+blk.48.hc_attn_norm.weight                         F32            0.0 MiB [np.uint64(10240)]
+blk.48.hc_attn_up.weight                           Q5_0           2.1 MiB [np.uint64(320), np.uint64(10240)]
+blk.48.hc_ffn_down.weight                          Q6_K           2.6 MiB [np.uint64(10240), np.uint64(320)]
+blk.48.hc_ffn_inject.weight                        Q4_K           0.0 MiB [np.uint64(10240), np.uint64(4)]
+blk.48.hc_ffn_norm.weight                          F32            0.0 MiB [np.uint64(10240)]
+blk.48.hc_ffn_up.weight                            Q5_0           2.1 MiB [np.uint64(320), np.uint64(10240)]
+blk.48.indexer.k_norm.weight                       F32            0.0 MiB [np.uint64(128)]
+blk.48.indexer.k_proj.weight                       BF16           0.6 MiB [np.uint64(2560), np.uint64(128)]
+blk.48.indexer.q_norm.weight                       F32            0.0 MiB [np.uint64(128)]
+blk.48.indexer.q_proj.weight                       BF16           2.5 MiB [np.uint64(2560), np.uint64(512)]
+blk.48.nextn.eh_proj.weight                        Q4_K           7.0 MiB [np.uint64(5120), np.uint64(2560)]
+blk.48.nextn.enorm.weight                          F32            0.0 MiB [np.uint64(2560)]
+blk.48.nextn.hc_head_down.weight                   Q4_K           1.8 MiB [np.uint64(10240), np.uint64(320)]
+blk.48.nextn.hc_head_norm.weight                   F32            0.0 MiB [np.uint64(10240)]
+blk.48.nextn.hc_head_up.weight                     Q5_0           2.1 MiB [np.uint64(320), np.uint64(10240)]
+blk.48.nextn.hnorm.weight                          F32            0.0 MiB [np.uint64(10240)]
+Counter({'exps': 1750.0, 'other': 896.6923828125})

@@ -1,0 +1,10 @@
+
+[stderr]
+Traceback (most recent call last):
+  File "/home/zef/flashnext-opt/runs/task02-v3-iq3-t10-r2/probe.py", line 16, in <module>
+    b.record_failure(ctx)
+    ~~~~~~~~~~~~~~~~^^^^^
+  File "/home/zef/flashnext-opt/runs/task02-v3-iq3-t10-r2/circuit_breaker.py", line 70, in record_failure
+    NOTIFIER.emit_call_failed(
+    ^^^^^^^^
+NameError: name 'NOTIFIER' is not defined

@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+*.pid
+venv/
+build-backups/

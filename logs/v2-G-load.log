@@ -1,0 +1,6 @@
+{"label": "v2-G-q2-c256-load-n42-ub512", "load_s": 20.0, "load_vram_mib": 15036, "board_free_mib": 436}
+{"label": "v2-G-q2-c256-load-n43-ub512", "load_s": 12.0, "load_vram_mib": 14124, "board_free_mib": 1348}
+{"label": "v2-G-q2-c256-load-n44-ub512", "load_s": 4.0, "load_vram_mib": 13212, "board_free_mib": 2260}
+{"label": "v2-G-q2-c256-load-n45-ub512", "load_s": 4.0, "load_vram_mib": 12298, "board_free_mib": 3174}
+{"label": "v2-G-q2-c256-load-n46-ub512", "load_s": 4.0, "load_vram_mib": 11386, "board_free_mib": 4086}
+CHAIN_DONE

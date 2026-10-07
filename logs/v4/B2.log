@@ -1,0 +1,75 @@
+loaded in 4s, vram 9996 MiB
+  rep 1/3 done
+  rep 2/3 done
+  rep 3/3 done
+FULL in the same load
+{"FULL_prompt_n": 120182, "FULL_prefill_ps": 723.5230011075715, "FULL_TTFT_s": 166.106675, "FULL_decode_ps": 28.128854853736815, "retrieved": {"early": "1000003", "mid": "1337774", "late": "1675545"}, "needles_ok": true, "finish_ok": true}
+{
+  "P4k_ps": 688.745,
+  "P4k_sd": 0.137,
+  "P4k_n": 4061,
+  "P32k_ps": 728.587,
+  "P32k_sd": 0.622,
+  "TTFT32k_s": 44.003,
+  "TTFT32k_sd": 0.038,
+  "D32k_ps": 35.516,
+  "D32k_sd": 0.554,
+  "P32k_n": 32060,
+  "D32k_predicted_n": [
+    1400,
+    1400,
+    1400
+  ],
+  "D0_ps": 40.133,
+  "D0_sd": 0.488,
+  "D0_predicted_n": [
+    1400,
+    1400,
+    1400
+  ],
+  "T_turn_s": 86.237,
+  "T_turn_sd": 0.66
+}
+loaded 9996 MiB, MemAvail 88381 MiB
+{"turn": 1, "prompt_n": 20047, "ttft_s": 27.215, "prompt_ps": 736.6121828901455, "predicted_n": 800, "decode_ps": 37.13793419195245, "finish_reason": "length", "content_len": 1723, "reasoning_len": 1832, "depth": 20889, "appended_est": 20000, "wall_s": 48.79, "peak_mib": 10334}
+{"turn": 2, "prompt_n": 3035, "ttft_s": 5.211, "prompt_ps": 582.4428131354576, "predicted_n": 800, "decode_ps": 36.780451912528264, "finish_reason": "length", "content_len": 0, "reasoning_len": 3436, "depth": 24723, "appended_est": 3800, "wall_s": 26.96, "peak_mib": 10378}
+{"turn": 3, "prompt_n": 3032, "ttft_s": 5.395, "prompt_ps": 561.9776869650832, "predicted_n": 800, "decode_ps": 36.529972636810236, "finish_reason": "length", "content_len": 0, "reasoning_len": 4130, "depth": 28554, "appended_est": 3800, "wall_s": 27.29, "peak_mib": 10424}
+{"turn": 4, "prompt_n": 3036, "ttft_s": 5.338, "prompt_ps": 568.7375319376284, "predicted_n": 800, "decode_ps": 35.9857649501712, "finish_reason": "length", "content_len": 0, "reasoning_len": 2850, "depth": 32389, "appended_est": 3800, "wall_s": 27.57, "peak_mib": 10468}
+{"turn": 5, "prompt_n": 3039, "ttft_s": 5.148, "prompt_ps": 590.2954954373985, "predicted_n": 800, "decode_ps": 35.2896661036662, "finish_reason": "length", "content_len": 0, "reasoning_len": 3463, "depth": 36227, "appended_est": 3800, "wall_s": 27.82, "peak_mib": 10480}
+{"turn": 6, "prompt_n": 3038, "ttft_s": 5.204, "prompt_ps": 583.8252352404445, "predicted_n": 800, "decode_ps": 34.82190968408204, "finish_reason": "length", "content_len": 0, "reasoning_len": 3893, "depth": 40064, "appended_est": 3800, "wall_s": 28.18, "peak_mib": 10480}
+{"turn": 7, "prompt_n": 3039, "ttft_s": 5.168, "prompt_ps": 588.0416818804795, "predicted_n": 620, "decode_ps": 34.61114048181056, "finish_reason": "stop", "content_len": 0, "reasoning_len": 2580, "depth": 43722, "appended_est": 3800, "wall_s": 23.09, "peak_mib": 10480}
+{"turn": 8, "prompt_n": 3028, "ttft_s": 5.156, "prompt_ps": 587.3205864593898, "predicted_n": 800, "decode_ps": 33.98052409876229, "finish_reason": "length", "content_len": 90, "reasoning_len": 3571, "depth": 47549, "appended_est": 3620, "wall_s": 28.71, "peak_mib": 10480}
+{"turn": 9, "prompt_n": 3032, "ttft_s": 5.214, "prompt_ps": 581.4928024922873, "predicted_n": 800, "decode_ps": 33.93123222140388, "finish_reason": "length", "content_len": 0, "reasoning_len": 3149, "depth": 51380, "appended_est": 3800, "wall_s": 28.81, "peak_mib": 10480}
+{"turn": 10, "prompt_n": 3040, "ttft_s": 5.231, "prompt_ps": 581.1065070739204, "predicted_n": 800, "decode_ps": 33.68427655912459, "finish_reason": "length", "content_len": 0, "reasoning_len": 3247, "depth": 55219, "appended_est": 3800, "wall_s": 29.0, "peak_mib": 10480}
+{"turn": 11, "prompt_n": 3038, "ttft_s": 5.241, "prompt_ps": 579.6234317446665, "predicted_n": 800, "decode_ps": 33.043087648671666, "finish_reason": "length", "content_len": 0, "reasoning_len": 3783, "depth": 59056, "appended_est": 3800, "wall_s": 29.47, "peak_mib": 10480}
+{"turn": 12, "prompt_n": 3040, "ttft_s": 5.261, "prompt_ps": 577.8206581529354, "predicted_n": 574, "decode_ps": 32.734198479727844, "finish_reason": "stop", "content_len": 0, "reasoning_len": 2338, "depth": 62669, "appended_est": 3800, "wall_s": 22.82, "peak_mib": 10480}
+{"turn": 13, "prompt_n": 3029, "ttft_s": 5.221, "prompt_ps": 580.1227240142271, "predicted_n": 800, "decode_ps": 32.12745213582618, "finish_reason": "length", "content_len": 1925, "reasoning_len": 1643, "depth": 66497, "appended_est": 3574, "wall_s": 30.15, "peak_mib": 10482}
+{"turn": 14, "prompt_n": 3032, "ttft_s": 5.245, "prompt_ps": 578.0938651313876, "predicted_n": 800, "decode_ps": 31.743515572498676, "finish_reason": "length", "content_len": 633, "reasoning_len": 2514, "depth": 70328, "appended_est": 3800, "wall_s": 30.48, "peak_mib": 10482}
+{"turn": 15, "prompt_n": 3036, "ttft_s": 4.906, "prompt_ps": 618.8352159635026, "predicted_n": 282, "decode_ps": 31.45261965063415, "finish_reason": "stop", "content_len": 0, "reasoning_len": 1310, "depth": 73645, "appended_est": 3800, "wall_s": 13.9, "peak_mib": 10482}
+{"turn": 16, "prompt_n": 3318, "ttft_s": 6.276, "prompt_ps": 528.6923135021134, "predicted_n": 685, "decode_ps": 31.154220130618167, "finish_reason": "stop", "content_len": 1737, "reasoning_len": 1174, "depth": 77362, "appended_est": 3282, "wall_s": 28.3, "peak_mib": 10482}
+{"session_s": 813.15, "sum_ttft_s": 106.43, "sum_decode_s": 706.72, "last_depth": 77362, "last_decode_ps": 31.154220130618167, "reuse_broken_turns": [], "peak_vram_mib": 10482}
+SKIP: v4-B2-M-n46 already done (state-v4.json)
+{
+  "status": "SCORED",
+  "probes": {
+    "probe1": "PASS",
+    "probe2": "PASS",
+    "probe3": "PASS",
+    "probe5": "PASS",
+    "probe4": {
+      "0": "trips (crit 7 FAIL, control)",
+      "-1": "trips (crit 7 FAIL, control)"
+    },
+    "error": null,
+    "gate4": true
+  },
+  "gate4_pass": true,
+  "diag_probes": null,
+  "crash": null,
+  "finish": "stop",
+  "predicted_n": 34014,
+  "tps": 37.88547740905456,
+  "wall": 900.4,
+  "notifier": "bound in NONE; annotation-only in breaker_events; read: circuit_breaker\u2192breaker_events.NOTIFIER"
+}
+PHASE B2 DONE Tue Oct  6 01:01:49 PM CST 2026

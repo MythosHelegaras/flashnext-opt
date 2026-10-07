@@ -1,0 +1,65 @@
+
+===== [03:17:22] task02 baseline
+-ncmoe 42 -t 16 -b 2048 -ub 512 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0
+  loaded 12590 MiB
+{
+  "label": "baseline",
+  "wall_s": 458.7,
+  "finish_reason": "length",
+  "content_len": 0,
+  "reasoning_len": 74976,
+  "prompt_n": 772,
+  "predicted_n": 16000,
+  "predicted_ps": 35.129304979513,
+  "files_found": [],
+  "files_missing": [
+    "breaker_state.py",
+    "call_context.py",
+    "breaker_events.py",
+    "circuit_breaker.py"
+  ]
+}
+MISSING FILES -> cannot score: ['breaker_state.py', 'call_context.py', 'breaker_events.py', 'circuit_breaker.py']
+----- task02 baseline rc=2
+
+===== [03:25:18] task02 winner
+-ncmoe 46 -t 16 -b 2048 -ub 2048 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0
+  loaded 9558 MiB
+Traceback (most recent call last):
+  File "/home/zef/flashnext-opt/task02.py", line 83, in <module>
+    meta, side = run(label, outdir)
+                 ~~~^^^^^^^^^^^^^^^
+  File "/home/zef/flashnext-opt/task02.py", line 42, in run
+    r=post("/v1/chat/completions",{"messages":[{"role":"user","content":prompt}],
+            "max_tokens":max_tokens,"temperature":0.3,"top_p":0.95,"top_k":20,
+            "seed":20260929,"cache_prompt":False,"stream":False})
+  File "/home/zef/flashnext-opt/task02.py", line 17, in post
+    with urllib.request.urlopen(req,timeout=timeout) as r: return json.loads(r.read().decode())
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/urllib/request.py", line 187, in urlopen
+    return opener.open(url, data, timeout)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/urllib/request.py", line 487, in open
+    response = self._open(req, data)
+  File "/usr/lib/python3.14/urllib/request.py", line 504, in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+                              '_open', req)
+  File "/usr/lib/python3.14/urllib/request.py", line 464, in _call_chain
+    result = func(*args)
+  File "/usr/lib/python3.14/urllib/request.py", line 1349, in http_open
+    return self.do_open(http.client.HTTPConnection, req)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/urllib/request.py", line 1324, in do_open
+    r = h.getresponse()
+  File "/usr/lib/python3.14/http/client.py", line 1478, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/http/client.py", line 343, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/http/client.py", line 312, in _read_status
+    raise RemoteDisconnected("Remote end closed connection without"
+                             " response")
+http.client.RemoteDisconnected: Remote end closed connection without response
+----- task02 winner rc=1
+PHASE F DONE

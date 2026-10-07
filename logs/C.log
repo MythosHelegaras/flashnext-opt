@@ -1,0 +1,85 @@
+
+===== [02:30:07] C-f16
+-ncmoe 46 -t 16 -b 2048 -ub 2048 -c 131072 --cache-type-k f16  --cache-type-v f16
+  loaded 11536 MiB in 4s
+  logprob smoke test -> [(220, 0.7261314916871167), (28862, 0.10118501314403548), (318, 0.03824092430235847)]
+  pool tokenised: 240000 tokens
+  f16 L8000-t0: 64 positions
+  f16 L8000-t1: 64 positions
+  f16 L60000-t0: 64 positions
+  f16 L60000-t1: 64 positions
+COLLECT DONE f16
+
+===== [02:35:00] C-q8
+-ncmoe 46 -t 16 -b 2048 -ub 2048 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0
+  loaded 9558 MiB in 4s
+  pool tokenised: 240000 tokens
+  q8 L8000-t0: 64 positions
+  q8 L8000-t1: 64 positions
+  q8 L60000-t0: 64 positions
+  q8 L60000-t1: 64 positions
+COLLECT DONE q8
+
+===== [02:39:52] C-f16kq8v
+-ncmoe 46 -t 16 -b 2048 -ub 2048 -c 131072 --cache-type-k f16  --cache-type-v q8_0
+  loaded 9700 MiB in 4s
+  pool tokenised: 240000 tokens
+  f16kq8v L8000-t0: 64 positions
+  f16kq8v L8000-t1: 64 positions
+  f16kq8v L60000-t0: 64 positions
+  f16kq8v L60000-t1: 64 positions
+COLLECT DONE f16kq8v
+
+=== KV VRAM cost at ncmoe 46 / ub2048 === {
+  "f16": {
+    "load_vram_mib": 11536,
+    "peak_vram_mib": 12584
+  },
+  "q8": {
+    "load_vram_mib": 9558,
+    "peak_vram_mib": 10608
+  },
+  "f16kq8v": {
+    "load_vram_mib": 9700,
+    "peak_vram_mib": 11500
+  }
+}
+{
+  "q8": {
+    "n_positions": 256,
+    "same_top_token_pct": 96.875,
+    "mean_kl": 0.256486,
+    "max_kl": 23.025348
+  },
+  "q8@L8000": {
+    "n_positions": 128,
+    "same_top_token_pct": 94.531,
+    "mean_kl": 0.508302,
+    "max_kl": 23.025348
+  },
+  "q8@L60000": {
+    "n_positions": 128,
+    "same_top_token_pct": 99.219,
+    "mean_kl": 0.004669,
+    "max_kl": 0.175991
+  },
+  "f16kq8v": {
+    "n_positions": 256,
+    "same_top_token_pct": 98.438,
+    "mean_kl": 0.140929,
+    "max_kl": 13.961831
+  },
+  "f16kq8v@L8000": {
+    "n_positions": 128,
+    "same_top_token_pct": 97.656,
+    "mean_kl": 0.278292,
+    "max_kl": 13.961831
+  },
+  "f16kq8v@L60000": {
+    "n_positions": 128,
+    "same_top_token_pct": 99.219,
+    "mean_kl": 0.003565,
+    "max_kl": 0.046757
+  }
+}
+PHASE C DONE

@@ -1,0 +1,205 @@
+>> bench --model iq3 --full --label v2-C-iq3-n46-ub2048 --spec -ncmoe 46 -b 2048 -ub 2048 -t 16 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0
+loaded in 4s, vram 10150 MiB
+  rep 1/3 done
+  rep 2/3 done
+  rep 3/3 done
+FULL in the same load
+{"FULL_prompt_n": 120182, "FULL_prefill_ps": 371.0782761189433, "FULL_TTFT_s": 323.872368, "FULL_decode_ps": 19.008758832344093, "retrieved": {"early": "1000003", "mid": "1337774", "late": "1675545"}, "needles_ok": true, "finish_ok": true}
+{
+  "P4k_ps": 612.224,
+  "P4k_sd": 0.507,
+  "P4k_n": 4061,
+  "P32k_ps": 576.929,
+  "P32k_sd": 17.549,
+  "TTFT32k_s": 55.605,
+  "TTFT32k_sd": 1.722,
+  "D32k_ps": 28.424,
+  "D32k_sd": 0.085,
+  "P32k_n": 32060,
+  "D32k_predicted_n": [
+    1400,
+    1400,
+    1400
+  ],
+  "D0_ps": 34.829,
+  "D0_sd": 0.19,
+  "D0_predicted_n": [
+    1400,
+    1400,
+    1400
+  ],
+  "T_turn_s": 108.377,
+  "T_turn_sd": 1.729
+}
+   v2-C-iq3-n46-ub2048: ok=True peak=12978 needles=True -> PASS
+>> bench --model iq3 --full --label v2-C-iq3-n43-ub512 --spec -ncmoe 43 -b 2048 -ub 512 -t 16 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0
+loaded in 24s, vram 12570 MiB
+  rep 1/3 done
+  rep 2/3 done
+  rep 3/3 done
+FULL in the same load
+{"FULL_prompt_n": 120182, "FULL_prefill_ps": 227.87618196287985, "FULL_TTFT_s": 527.400446, "FULL_decode_ps": 19.208546670289596, "retrieved": {"early": "1000003", "mid": "1337774", "late": "1675545"}, "needles_ok": true, "finish_ok": true}
+{
+  "P4k_ps": 297.551,
+  "P4k_sd": 0.233,
+  "P4k_n": 4061,
+  "P32k_ps": 291.03,
+  "P32k_sd": 5.183,
+  "TTFT32k_s": 110.184,
+  "TTFT32k_sd": 1.983,
+  "D32k_ps": 29.267,
+  "D32k_sd": 0.012,
+  "P32k_n": 32060,
+  "D32k_predicted_n": [
+    1400,
+    1400,
+    1400
+  ],
+  "D0_ps": 36.001,
+  "D0_sd": 0.134,
+  "D0_predicted_n": [
+    1400,
+    1400,
+    1400
+  ],
+  "T_turn_s": 161.436,
+  "T_turn_sd": 1.983
+}
+   v2-C-iq3-n43-ub512: ok=True peak=12906 needles=True -> PASS
+>> bench --model iq3 --full --label v2-C-iq3-n44-ub1024 --spec -ncmoe 44 -b 2048 -ub 1024 -t 16 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0
+loaded in 4s, vram 11638 MiB
+  rep 1/3 done
+  rep 2/3 done
+  rep 3/3 done
+FULL in the same load
+{"FULL_prompt_n": 120182, "FULL_prefill_ps": 307.5046029868716, "FULL_TTFT_s": 390.829922, "FULL_decode_ps": 19.260392806587948, "retrieved": {"early": "1000003", "mid": "1337774", "late": "1675545"}, "needles_ok": true, "finish_ok": true}
+{
+  "P4k_ps": 442.6,
+  "P4k_sd": 0.16,
+  "P4k_n": 4061,
+  "P32k_ps": 424.394,
+  "P32k_sd": 12.735,
+  "TTFT32k_s": 75.589,
+  "TTFT32k_sd": 2.308,
+  "D32k_ps": 28.992,
+  "D32k_sd": 0.096,
+  "P32k_n": 32060,
+  "D32k_predicted_n": [
+    1400,
+    1400,
+    1400
+  ],
+  "D0_ps": 35.658,
+  "D0_sd": 0.108,
+  "D0_predicted_n": [
+    1400,
+    1400,
+    1400
+  ],
+  "T_turn_s": 127.327,
+  "T_turn_sd": 2.314
+}
+   v2-C-iq3-n44-ub1024: ok=True peak=12732 needles=True -> PASS
+PASSING [(46, 2048), (43, 512), (44, 1024)]
+>> session --model iq3 --label v2-D-iq3-n46-ub2048 --spec -ncmoe 46 -b 2048 -ub 2048 -t 16 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0
+loaded 10150 MiB, MemAvail 88632 MiB
+{"turn": 1, "prompt_n": 20047, "ttft_s": 33.723, "prompt_ps": 594.4647905713323, "predicted_n": 800, "decode_ps": 30.537777523997, "finish_reason": "length", "content_len": 0, "reasoning_len": 3946, "depth": 20889, "appended_est": 20000, "wall_s": 59.95, "peak_mib": 10228}
+{"turn": 2, "prompt_n": 3039, "ttft_s": 6.626, "prompt_ps": 458.62421789404107, "predicted_n": 800, "decode_ps": 29.850008006078493, "finish_reason": "length", "content_len": 0, "reasoning_len": 3306, "depth": 24727, "appended_est": 3800, "wall_s": 33.41, "peak_mib": 10228}
+{"turn": 3, "prompt_n": 3032, "ttft_s": 6.863, "prompt_ps": 441.76960782456734, "predicted_n": 800, "decode_ps": 29.151666085214366, "finish_reason": "length", "content_len": 0, "reasoning_len": 3815, "depth": 28558, "appended_est": 3800, "wall_s": 34.3, "peak_mib": 10228}
+{"turn": 4, "prompt_n": 3036, "ttft_s": 7.051, "prompt_ps": 430.6056207082158, "predicted_n": 800, "decode_ps": 28.632081692095113, "finish_reason": "length", "content_len": 0, "reasoning_len": 2714, "depth": 32393, "appended_est": 3800, "wall_s": 34.98, "peak_mib": 10228}
+{"turn": 5, "prompt_n": 3039, "ttft_s": 7.221, "prompt_ps": 420.870641343706, "predicted_n": 800, "decode_ps": 28.013131321843254, "finish_reason": "length", "content_len": 0, "reasoning_len": 3279, "depth": 36231, "appended_est": 3800, "wall_s": 35.77, "peak_mib": 10228}
+{"turn": 6, "prompt_n": 3038, "ttft_s": 7.524, "prompt_ps": 403.7692752314928, "predicted_n": 800, "decode_ps": 27.459128170274916, "finish_reason": "length", "content_len": 0, "reasoning_len": 3485, "depth": 40068, "appended_est": 3800, "wall_s": 36.66, "peak_mib": 10228}
+{"turn": 7, "prompt_n": 3039, "ttft_s": 7.651, "prompt_ps": 397.1930644523186, "predicted_n": 800, "decode_ps": 26.812125523700544, "finish_reason": "length", "content_len": 0, "reasoning_len": 3007, "depth": 43906, "appended_est": 3800, "wall_s": 37.49, "peak_mib": 10300}
+{"turn": 8, "prompt_n": 3032, "ttft_s": 7.879, "prompt_ps": 384.8034126681548, "predicted_n": 800, "decode_ps": 26.298127754329805, "finish_reason": "length", "content_len": 0, "reasoning_len": 3431, "depth": 47737, "appended_est": 3800, "wall_s": 38.3, "peak_mib": 10742}
+{"turn": 9, "prompt_n": 3035, "ttft_s": 8.231, "prompt_ps": 368.74957323463724, "predicted_n": 800, "decode_ps": 25.83558974389817, "finish_reason": "length", "content_len": 0, "reasoning_len": 2898, "depth": 51571, "appended_est": 3800, "wall_s": 39.2, "peak_mib": 10846}
+{"turn": 10, "prompt_n": 3040, "ttft_s": 8.285, "prompt_ps": 366.9252604626203, "predicted_n": 800, "decode_ps": 25.40555646547088, "finish_reason": "length", "content_len": 0, "reasoning_len": 3483, "depth": 55410, "appended_est": 3800, "wall_s": 39.78, "peak_mib": 10952}
+{"turn": 11, "prompt_n": 3038, "ttft_s": 8.591, "prompt_ps": 353.6438352592449, "predicted_n": 800, "decode_ps": 24.91471620922125, "finish_reason": "length", "content_len": 0, "reasoning_len": 3596, "depth": 59247, "appended_est": 3800, "wall_s": 40.71, "peak_mib": 11056}
+{"turn": 12, "prompt_n": 3040, "ttft_s": 8.688, "prompt_ps": 349.89466904395545, "predicted_n": 800, "decode_ps": 24.37966863789052, "finish_reason": "length", "content_len": 0, "reasoning_len": 3362, "depth": 63086, "appended_est": 3800, "wall_s": 41.51, "peak_mib": 11160}
+{"turn": 13, "prompt_n": 3032, "ttft_s": 9.073, "prompt_ps": 334.1817935730845, "predicted_n": 800, "decode_ps": 24.013287552807068, "finish_reason": "length", "content_len": 0, "reasoning_len": 3309, "depth": 66917, "appended_est": 3800, "wall_s": 42.4, "peak_mib": 11266}
+{"turn": 14, "prompt_n": 3035, "ttft_s": 9.353, "prompt_ps": 324.4868003366965, "predicted_n": 800, "decode_ps": 23.520820076500655, "finish_reason": "length", "content_len": 0, "reasoning_len": 3471, "depth": 70751, "appended_est": 3800, "wall_s": 43.38, "peak_mib": 11370}
+{"turn": 15, "prompt_n": 3039, "ttft_s": 9.29, "prompt_ps": 327.1087941891529, "predicted_n": 327, "decode_ps": 23.101777929836924, "finish_reason": "stop", "content_len": 0, "reasoning_len": 1546, "depth": 74116, "appended_est": 3800, "wall_s": 23.46, "peak_mib": 11476}
+{"turn": 16, "prompt_n": 3363, "ttft_s": 11.048, "prompt_ps": 304.4112475565861, "predicted_n": 627, "decode_ps": 22.815007464079116, "finish_reason": "stop", "content_len": 0, "reasoning_len": 3047, "depth": 77775, "appended_est": 3327, "wall_s": 38.55, "peak_mib": 11568}
+{"session_s": 1077.22, "sum_ttft_s": 157.1, "sum_decode_s": 920.12, "last_depth": 77775, "last_decode_ps": 22.815007464079116, "reuse_broken_turns": [], "peak_vram_mib": 11568}
+>> session --model iq3 --label v2-D-iq3-n43-ub512 --spec -ncmoe 43 -b 2048 -ub 512 -t 16 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0
+loaded 12570 MiB, MemAvail 89067 MiB
+{"turn": 1, "prompt_n": 20047, "ttft_s": 68.743, "prompt_ps": 291.6208501270741, "predicted_n": 800, "decode_ps": 31.126041222565455, "finish_reason": "length", "content_len": 0, "reasoning_len": 4100, "depth": 20889, "appended_est": 20000, "wall_s": 94.48, "peak_mib": 12610}
+{"turn": 2, "prompt_n": 3039, "ttft_s": 11.583, "prompt_ps": 262.36547294549234, "predicted_n": 800, "decode_ps": 30.465141320126637, "finish_reason": "length", "content_len": 0, "reasoning_len": 3487, "depth": 24727, "appended_est": 3800, "wall_s": 37.83, "peak_mib": 12610}
+{"turn": 3, "prompt_n": 3032, "ttft_s": 12.169, "prompt_ps": 249.1668893034183, "predicted_n": 800, "decode_ps": 29.93559014962475, "finish_reason": "length", "content_len": 0, "reasoning_len": 3912, "depth": 28558, "appended_est": 3800, "wall_s": 38.88, "peak_mib": 12612}
+{"turn": 4, "prompt_n": 3036, "ttft_s": 12.216, "prompt_ps": 248.52882152560838, "predicted_n": 800, "decode_ps": 29.34279628108151, "finish_reason": "length", "content_len": 0, "reasoning_len": 3304, "depth": 32393, "appended_est": 3800, "wall_s": 39.47, "peak_mib": 12612}
+{"turn": 5, "prompt_n": 3039, "ttft_s": 12.41, "prompt_ps": 244.87773236290093, "predicted_n": 800, "decode_ps": 28.655378121342654, "finish_reason": "length", "content_len": 0, "reasoning_len": 3405, "depth": 36231, "appended_est": 3800, "wall_s": 40.32, "peak_mib": 12612}
+{"turn": 6, "prompt_n": 3841, "ttft_s": 15.765, "prompt_ps": 243.64708154755544, "predicted_n": 800, "decode_ps": 28.080501279472756, "finish_reason": "length", "content_len": 0, "reasoning_len": 3861, "depth": 40068, "appended_est": 3800, "wall_s": 44.25, "peak_mib": 12612}
+{"turn": 7, "prompt_n": 3039, "ttft_s": 12.838, "prompt_ps": 236.7196314184203, "predicted_n": 800, "decode_ps": 27.39996048095813, "finish_reason": "length", "content_len": 0, "reasoning_len": 2614, "depth": 43906, "appended_est": 3800, "wall_s": 42.04, "peak_mib": 12612}
+{"turn": 8, "prompt_n": 3032, "ttft_s": 13.198, "prompt_ps": 229.73372709330462, "predicted_n": 800, "decode_ps": 26.88398708303491, "finish_reason": "length", "content_len": 0, "reasoning_len": 3688, "depth": 47737, "appended_est": 3800, "wall_s": 42.96, "peak_mib": 12612}
+{"turn": 9, "prompt_n": 3035, "ttft_s": 13.49, "prompt_ps": 224.97831572263368, "predicted_n": 800, "decode_ps": 26.434528933882216, "finish_reason": "length", "content_len": 0, "reasoning_len": 3277, "depth": 51571, "appended_est": 3800, "wall_s": 43.76, "peak_mib": 12612}
+{"turn": 10, "prompt_n": 3040, "ttft_s": 13.633, "prompt_ps": 222.98452612084014, "predicted_n": 800, "decode_ps": 25.932519947998642, "finish_reason": "length", "content_len": 0, "reasoning_len": 3287, "depth": 55410, "appended_est": 3800, "wall_s": 44.49, "peak_mib": 12612}
+{"turn": 11, "prompt_n": 3038, "ttft_s": 13.929, "prompt_ps": 218.1009423999575, "predicted_n": 800, "decode_ps": 25.37395622214502, "finish_reason": "length", "content_len": 0, "reasoning_len": 3654, "depth": 59247, "appended_est": 3800, "wall_s": 45.47, "peak_mib": 12612}
+{"turn": 12, "prompt_n": 3040, "ttft_s": 14.055, "prompt_ps": 216.28764036374176, "predicted_n": 800, "decode_ps": 24.88079948392426, "finish_reason": "length", "content_len": 399, "reasoning_len": 2921, "depth": 63086, "appended_est": 3800, "wall_s": 46.22, "peak_mib": 12612}
+{"turn": 13, "prompt_n": 3030, "ttft_s": 14.178, "prompt_ps": 213.71474526648288, "predicted_n": 800, "decode_ps": 24.410571763414815, "finish_reason": "length", "content_len": 912, "reasoning_len": 2729, "depth": 66915, "appended_est": 3800, "wall_s": 46.97, "peak_mib": 12612}
+{"turn": 14, "prompt_n": 3032, "ttft_s": 14.02, "prompt_ps": 216.26516620106412, "predicted_n": 800, "decode_ps": 23.995900695292484, "finish_reason": "length", "content_len": 0, "reasoning_len": 3391, "depth": 70746, "appended_est": 3800, "wall_s": 47.38, "peak_mib": 12612}
+{"turn": 15, "prompt_n": 3039, "ttft_s": 13.872, "prompt_ps": 219.07748984919337, "predicted_n": 303, "decode_ps": 23.522841496940668, "finish_reason": "stop", "content_len": 0, "reasoning_len": 1368, "depth": 74087, "appended_est": 3800, "wall_s": 26.77, "peak_mib": 12612}
+{"turn": 16, "prompt_n": 3339, "ttft_s": 15.828, "prompt_ps": 210.9607337566869, "predicted_n": 653, "decode_ps": 23.24602916285665, "finish_reason": "stop", "content_len": 931, "reasoning_len": 2249, "depth": 77772, "appended_est": 3303, "wall_s": 43.94, "peak_mib": 12612}
+{"session_s": 1173.13, "sum_ttft_s": 271.93, "sum_decode_s": 901.2, "last_depth": 77772, "last_decode_ps": 23.24602916285665, "reuse_broken_turns": [], "peak_vram_mib": 12612}
+>> session --model iq3 --label v2-D-iq3-n44-ub1024 --spec -ncmoe 44 -b 2048 -ub 1024 -t 16 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0
+loaded 11638 MiB, MemAvail 88933 MiB
+{"turn": 1, "prompt_n": 20047, "ttft_s": 47.272, "prompt_ps": 424.0753187551017, "predicted_n": 800, "decode_ps": 30.872773301225646, "finish_reason": "length", "content_len": 0, "reasoning_len": 3911, "depth": 20889, "appended_est": 20000, "wall_s": 73.22, "peak_mib": 11690}
+{"turn": 2, "prompt_n": 3039, "ttft_s": 8.129, "prompt_ps": 373.83347717536884, "predicted_n": 800, "decode_ps": 30.311585649501406, "finish_reason": "length", "content_len": 0, "reasoning_len": 3638, "depth": 24727, "appended_est": 3800, "wall_s": 34.51, "peak_mib": 11690}
+{"turn": 3, "prompt_n": 3032, "ttft_s": 8.333, "prompt_ps": 363.8749902190595, "predicted_n": 800, "decode_ps": 29.577769748057, "finish_reason": "length", "content_len": 0, "reasoning_len": 4188, "depth": 28558, "appended_est": 3800, "wall_s": 35.37, "peak_mib": 11694}
+{"turn": 4, "prompt_n": 3036, "ttft_s": 8.509, "prompt_ps": 356.7853079664777, "predicted_n": 800, "decode_ps": 28.984319084342193, "finish_reason": "length", "content_len": 0, "reasoning_len": 2855, "depth": 32393, "appended_est": 3800, "wall_s": 36.1, "peak_mib": 11716}
+{"turn": 5, "prompt_n": 3039, "ttft_s": 8.681, "prompt_ps": 350.09467762777507, "predicted_n": 800, "decode_ps": 28.001266119827754, "finish_reason": "length", "content_len": 0, "reasoning_len": 3388, "depth": 36231, "appended_est": 3800, "wall_s": 37.24, "peak_mib": 11738}
+{"turn": 6, "prompt_n": 3038, "ttft_s": 8.988, "prompt_ps": 338.0010033222673, "predicted_n": 800, "decode_ps": 27.37558209087364, "finish_reason": "length", "content_len": 0, "reasoning_len": 3773, "depth": 40068, "appended_est": 3800, "wall_s": 38.21, "peak_mib": 11762}
+{"turn": 7, "prompt_n": 3039, "ttft_s": 9.375, "prompt_ps": 324.17479966018715, "predicted_n": 800, "decode_ps": 26.814807008900566, "finish_reason": "length", "content_len": 0, "reasoning_len": 3059, "depth": 43906, "appended_est": 3800, "wall_s": 39.21, "peak_mib": 11762}
+{"turn": 8, "prompt_n": 3032, "ttft_s": 9.367, "prompt_ps": 323.6869912632269, "predicted_n": 800, "decode_ps": 26.558652173996865, "finish_reason": "length", "content_len": 107, "reasoning_len": 3389, "depth": 47737, "appended_est": 3800, "wall_s": 39.49, "peak_mib": 11762}
+{"turn": 9, "prompt_n": 3032, "ttft_s": 9.598, "prompt_ps": 315.8953607036382, "predicted_n": 800, "decode_ps": 26.040412242865592, "finish_reason": "length", "content_len": 0, "reasoning_len": 3090, "depth": 51568, "appended_est": 3800, "wall_s": 40.32, "peak_mib": 11762}
+{"turn": 10, "prompt_n": 3040, "ttft_s": 9.76, "prompt_ps": 311.4808033048933, "predicted_n": 800, "decode_ps": 24.902779424457183, "finish_reason": "length", "content_len": 0, "reasoning_len": 3437, "depth": 55407, "appended_est": 3800, "wall_s": 41.89, "peak_mib": 11762}
+{"turn": 11, "prompt_n": 3038, "ttft_s": 10.058, "prompt_ps": 302.0514543359944, "predicted_n": 800, "decode_ps": 25.066504668236497, "finish_reason": "length", "content_len": 38, "reasoning_len": 3739, "depth": 59244, "appended_est": 3800, "wall_s": 41.98, "peak_mib": 11762}
+{"turn": 12, "prompt_n": 3037, "ttft_s": 10.196, "prompt_ps": 297.8477387060345, "predicted_n": 800, "decode_ps": 24.66185707981574, "finish_reason": "length", "content_len": 0, "reasoning_len": 3313, "depth": 63080, "appended_est": 3800, "wall_s": 42.65, "peak_mib": 11762}
+{"turn": 13, "prompt_n": 3033, "ttft_s": 10.516, "prompt_ps": 288.4050610571486, "predicted_n": 630, "decode_ps": 24.3268473214188, "finish_reason": "stop", "content_len": 35, "reasoning_len": 2918, "depth": 66742, "appended_est": 3800, "wall_s": 36.43, "peak_mib": 11762}
+{"turn": 14, "prompt_n": 3031, "ttft_s": 10.426, "prompt_ps": 290.72893157645194, "predicted_n": 800, "decode_ps": 23.788959594467016, "finish_reason": "length", "content_len": 0, "reasoning_len": 3054, "depth": 70572, "appended_est": 3630, "wall_s": 44.07, "peak_mib": 11762}
+{"turn": 15, "prompt_n": 3039, "ttft_s": 10.41, "prompt_ps": 291.9226753603718, "predicted_n": 364, "decode_ps": 23.494143518409153, "finish_reason": "stop", "content_len": 0, "reasoning_len": 1674, "depth": 73974, "appended_est": 3800, "wall_s": 25.92, "peak_mib": 11800}
+{"turn": 16, "prompt_n": 3400, "ttft_s": 12.443, "prompt_ps": 273.2524141850793, "predicted_n": 702, "decode_ps": 23.13558993675106, "finish_reason": "stop", "content_len": 28, "reasoning_len": 3387, "depth": 77708, "appended_est": 3364, "wall_s": 42.81, "peak_mib": 12134}
+{"session_s": 1105.28, "sum_ttft_s": 192.06, "sum_decode_s": 913.21, "last_depth": 77708, "last_decode_ps": 23.13558993675106, "reuse_broken_turns": [], "peak_vram_mib": 12134}
+SESSIONS {'n46-ub2048': 1077.22, 'n43-ub512': 1173.13, 'n44-ub1024': 1105.28}
+BEST IQ3 n46 ub2048
+>> cold --model iq3 --label v2-E-iq3-n46-ub2048 --spec -ncmoe 46 -b 2048 -ub 2048 -t 16 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0
+{"item": "300", "target": 300, "templated_n": 300, "kind": "prose", "load_vram_mib": 10150, "mem_avail_kb": 90687228, "prompt_n": 300, "finish_reason": "stop", "predicted_n": 275, "alive_after": true, "crash": null, "ok": true}
+{"item": "508", "target": 508, "templated_n": 508, "kind": "source", "load_vram_mib": 10150, "mem_avail_kb": 90576436, "prompt_n": 508, "finish_reason": "length", "predicted_n": 300, "alive_after": true, "crash": null, "ok": true}
+{"item": "777", "target": 777, "templated_n": 777, "kind": "prose", "load_vram_mib": 10150, "mem_avail_kb": 90680088, "prompt_n": 777, "finish_reason": "stop", "predicted_n": 245, "alive_after": true, "crash": null, "ok": true}
+{"item": "1016", "target": 1016, "templated_n": 1016, "kind": "source", "load_vram_mib": 10150, "mem_avail_kb": 90695808, "prompt_n": 1016, "finish_reason": "length", "predicted_n": 300, "alive_after": true, "crash": null, "ok": true}
+{"item": "1500", "target": 1500, "templated_n": 1500, "kind": "prose", "load_vram_mib": 10150, "mem_avail_kb": 90649896, "prompt_n": 1500, "finish_reason": "stop", "predicted_n": 215, "alive_after": true, "crash": null, "ok": true}
+{"item": "2044", "target": 2044, "templated_n": 2044, "kind": "source", "load_vram_mib": 10150, "mem_avail_kb": 90693596, "prompt_n": 2044, "finish_reason": "length", "predicted_n": 300, "alive_after": true, "crash": null, "ok": true}
+{"item": "3000", "target": 3000, "templated_n": 3000, "kind": "prose", "load_vram_mib": 10150, "mem_avail_kb": 90647960, "prompt_n": 3000, "finish_reason": "stop", "predicted_n": 240, "alive_after": true, "crash": null, "ok": true}
+{"item": "4061", "target": 4061, "templated_n": 4061, "kind": "source", "load_vram_mib": 10150, "mem_avail_kb": 90632508, "prompt_n": 4061, "finish_reason": "length", "predicted_n": 300, "alive_after": true, "crash": null, "ok": true}
+{"item": "B1", "target": null, "templated_n": 772, "kind": "prompt_B", "load_vram_mib": 10150, "mem_avail_kb": 90633636, "prompt_n": 772, "finish_reason": "length", "predicted_n": 300, "alive_after": true, "crash": null, "ok": true}
+{"item": "B2", "target": null, "templated_n": 772, "kind": "prompt_B", "load_vram_mib": 10150, "mem_avail_kb": 90667416, "prompt_n": 772, "finish_reason": "length", "predicted_n": 300, "alive_after": true, "crash": null, "ok": true}
+{"item": "B3", "target": null, "templated_n": 772, "kind": "prompt_B", "load_vram_mib": 10150, "mem_avail_kb": 90647848, "prompt_n": 772, "finish_reason": "length", "predicted_n": 300, "alive_after": true, "crash": null, "ok": true}
+COLD v2-E-iq3-n46-ub2048: 11/11
+>> task02 --model iq3 --label v2-F-iq3-n46-ub2048 --spec -ncmoe 46 -b 2048 -ub 2048 -t 16 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0
+{
+  "meta": {
+    "label": "v2-F-iq3-n46-ub2048",
+    "wall_s": 1162.7,
+    "finish_reason": "stop",
+    "content_len": 7487,
+    "reasoning_len": 151877,
+    "prompt_n": 772,
+    "predicted_n": 35806,
+    "predicted_ps": 30.861372504934636,
+    "files_found": [
+      "breaker_events.py",
+      "breaker_state.py",
+      "call_context.py",
+      "circuit_breaker.py"
+    ],
+    "files_missing": []
+  },
+  "probes": {
+    "probe1": "NO_OUTPUT",
+    "probe2": "NO_OUTPUT",
+    "probe3": "NO_OUTPUT",
+    "probe5": "NO_OUTPUT",
+    "probe4_control": "other"
+  },
+  "gate4_pass": false,
+  "crash": null
+}
+CHAIN_DONE

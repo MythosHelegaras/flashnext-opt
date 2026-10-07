@@ -1,0 +1,165 @@
+{
+  "phase": "finish",
+  "started": "2026-10-05T11:53",
+  "done": [
+    {
+      "key": "v2-A-q2-n42-ub512",
+      "T_turn": 163.612,
+      "ok": true,
+      "kind": "bench"
+    },
+    {
+      "key": "v2-B-q2-n46-ub2048",
+      "T_turn": 108.248,
+      "ok": true,
+      "kind": "bench"
+    },
+    {
+      "key": "v2-B-q2-n43-ub1024",
+      "T_turn": 127.681,
+      "ok": true,
+      "kind": "bench"
+    },
+    {
+      "key": "v2-D-q2-n46-ub2048",
+      "kind": "session",
+      "ok": true,
+      "session_s": 1046.14
+    },
+    {
+      "key": "v2-D-q2-n42-ub512",
+      "kind": "session",
+      "ok": true,
+      "session_s": 1146.73
+    },
+    {
+      "key": "v2-E-q2-n46-ub2048",
+      "kind": "cold",
+      "ok": true,
+      "passed": 11,
+      "total": 11
+    },
+    {
+      "key": "v2-F-q2-n46-ub2048",
+      "kind": "task02",
+      "ok": true,
+      "gate4": true
+    },
+    {
+      "key": "v2-C-iq3-n46-ub2048",
+      "T_turn": 108.377,
+      "ok": true,
+      "kind": "bench"
+    },
+    {
+      "key": "v2-C-iq3-n43-ub512",
+      "T_turn": 161.436,
+      "ok": true,
+      "kind": "bench"
+    },
+    {
+      "key": "v2-C-iq3-n44-ub1024",
+      "T_turn": 127.327,
+      "ok": true,
+      "kind": "bench"
+    },
+    {
+      "key": "v2-D-iq3-n46-ub2048",
+      "kind": "session",
+      "ok": true,
+      "session_s": 1077.22
+    },
+    {
+      "key": "v2-D-iq3-n43-ub512",
+      "kind": "session",
+      "ok": true,
+      "session_s": 1173.13
+    },
+    {
+      "key": "v2-D-iq3-n44-ub1024",
+      "kind": "session",
+      "ok": true,
+      "session_s": 1105.28
+    },
+    {
+      "key": "v2-E-iq3-n46-ub2048",
+      "kind": "cold",
+      "ok": true,
+      "passed": 11,
+      "total": 11
+    },
+    {
+      "key": "v2-F-iq3-n46-ub2048",
+      "kind": "task02",
+      "ok": true,
+      "gate4": false
+    },
+    {
+      "key": "v2-G-q2-c256-n45-ub512-FULL240",
+      "kind": "full",
+      "ok": true,
+      "peak": 13348,
+      "needles_ok": true
+    },
+    {
+      "key": "v2-F2-q2-n46-ub2048",
+      "kind": "task02",
+      "ok": true,
+      "gate4": true
+    },
+    {
+      "key": "v2-F2-iq3-n46-ub2048",
+      "kind": "task02",
+      "ok": true,
+      "gate4": true
+    }
+  ],
+  "best": null,
+  "config_touched": false,
+  "updated": "2026-10-05T16:52:13",
+  "status": "COMPLETE",
+  "finished": "2026-10-05T16:55",
+  "verdict": "Q2 UD-Q2_K_XL, -ncmoe 46 -t 16 -b 2048 -ub 2048 (recommended, not applied)",
+  "best_q2": {
+    "spec": "-ncmoe 46 -b 2048 -ub 2048",
+    "session_s": 1046.14,
+    "full_peak": 12486,
+    "cold": "11/11",
+    "task02": "2/2"
+  },
+  "best_iq3": {
+    "spec": "-ncmoe 46 -b 2048 -ub 2048",
+    "session_s": 1077.22,
+    "ratio": 1.03,
+    "full_peak": 12978,
+    "cold": "11/11",
+    "task02": "1/2 (run1 NOTIFIER placement NameError)"
+  },
+  "shipped": {
+    "spec": "-ncmoe 42 -b 2048 -ub 512",
+    "session_s": 1146.73,
+    "full_peak": 13020
+  },
+  "phases_done": [
+    "0",
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "F2",
+    "G",
+    "finish"
+  ],
+  "artifacts": [
+    "REPORT-v2.md",
+    "DECISIONS-v2.md",
+    "results-v2.jsonl",
+    "harness2.py",
+    "apply-flashnext-v2.sh (NOT run)",
+    "layer-sizes-v2.json",
+    "session-analysis.py",
+    "summ2.py"
+  ]
+}

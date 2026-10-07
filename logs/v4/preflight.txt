@@ -1,0 +1,54 @@
+Tue Oct  6 11:51:01 AM CST 2026
+-- F
+version: 0.3.0-dev (build 10654, commit bea3b12da)
+built with GNU 16.2.1 for Linux x86_64
+-- M
+-rwxr-xr-x 1 zef zef 15976 Oct  6 11:46 /opt/llama.cpp-flashnext/build/bin/llama-server
+version: 0.6.0-dev (build 11455, commit abeada335)
+built with GNU 16.2.1 for Linux x86_64
+abeada335 vocab : implement PLaMo-3 tokenizer pre-segmentation (#30045)
+6c84c7d ancestor OK
+6c84c7d5d model: add Qwen3.8-Flash-Next (qwen4exp) (#27742)
+c061df1 ancestor OK
+c061df198 Qwen4Exp: add MTP (#29761)
+dd26678 ancestor OK
+dd266785c CUDA: fix MMQ memory fault if n_expert >> n_ubatch (#29941)
+-- MTP
+stat: cannot statx '/mnt/ai/llm/models/qwen3.8-flash-next/MTP/mtp-Qwen3.8-Flash-Next-Q4_K_M.gguf': No such file or directory
+gcc (GCC) 16.2.1 20260810
+Cuda compilation tools, release 13.4, V13.4.92
+Build cuda_13.4.r13.4/compiler.38855100_0
+/opt/cuda
+driver_version, name, memory.used [MiB], memory.free [MiB]
+615.71.09, NVIDIA GeForce RTX 5070 Ti, 10163 MiB, 5768 MiB
+pid, used_gpu_memory [MiB], process_name
+1561, 72 MiB, /usr/bin/kwin_wayland
+109207, 9666 MiB, /opt/llama.cpp-qwen4exp/bin/llama-server
+active
+{"running":[{"model":"flashnext","state":"ready","cmd":"/usr/bin/env LLAMA_ATTN_ROT_DISABLE=1 /opt/llama.cpp-qwen4exp/bin/llama-server --port 5801 -m /mnt/ai/llm/models/qwen3.8-flash-next/UD-Q2_K_XL/Qwen3.8-Flash-Next-UD-Q2_K_XL-00001-of-00003.gguf -ngl 999 -fa on -np 1 --jinja -ot per_layer_token_embd=CPU -ncmoe 46 -t 16 -b 2048 -ub 2048 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0 --temp 0.3 --top-p 0.95 --top-k 20\n","proxy":"http://localhost:5801","ttl":1800,"name":"","description":""}]}
+
+109207 /opt/llama.cpp-qwen4exp/bin/llama-server --port 5801 -m /mnt/ai/llm/models/qwen3.8-flash-next/UD-Q2_K_XL/Qwen3.8-Flash-Next-UD-Q2_K_XL-00001-of-00003.gguf -ngl 999 -fa on -np 1 --jinja -ot per_layer_token_embd=CPU -ncmoe 46 -t 16 -b 2048 -ub 2048 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0 --temp 0.3 --top-p 0.95 --top-k 20
+94:  "flashnext":
+95-    cmd: >
+96-      /usr/bin/env LLAMA_ATTN_ROT_DISABLE=1
+97-      /opt/llama.cpp-qwen4exp/bin/llama-server --port ${PORT}
+98-      -m /mnt/ai/llm/models/qwen3.8-flash-next/UD-Q2_K_XL/Qwen3.8-Flash-Next-UD-Q2_K_XL-00001-of-00003.gguf
+99-      -ngl 999 -fa on -np 1 --jinja
+100-      -ot per_layer_token_embd=CPU
+101-      -ncmoe 46 -t 16 -b 2048 -ub 2048
+102-      -c 131072 --cache-type-k q8_0 --cache-type-v q8_0
+103-      --temp 0.3 --top-p 0.95 --top-k 20
+104-    ttl: 1800
+105-
+106-  # n_ctx_train = 262144. -np 1 required (was silently running n_parallel=4).
+107-  # AnythingLLM "Token Context Window" must be 65536 to match.
+108-  # --- Overnight auditor (primary) : Qwen3.6-27B DENSE @ Q8 ---
+109-  # SUPERSEDED by flashnext for most audit work — flashnext prefills 261 t/s vs this
+110-  # slot's heavy spill at -ngl 20. Kept for cross-checking / if flashnext is unavailable.
+111-
+112-# Friendly aliases so existing tools keep working (e.g. SaaS Anthropic SDK)
+113-aliases:
+114-  "gpt-4o-mini": "fim"
+115-  "claude-3-5-sonnet": "forge"
+116-  "claude": "forge"
+2026-10-06 11:41:08.821334616 -0600

@@ -1,0 +1,76 @@
+>> full --model q2 --window 256 --timeout 2400 --label v2-G-q2-c256-n45-ub512-FULL240 --spec -ncmoe 45 -b 2048 -ub 512 -c 262144 -t 16 --cache-type-k q8_0 --cache-type-v q8_0
+loaded 12298 MiB; full prompt going in
+{
+  "FULL_prompt_n": 240183,
+  "FULL_prefill_ps": 167.88400000488448,
+  "FULL_TTFT_s": 1430.648543,
+  "FULL_decode_ps": 12.797332003436056,
+  "peak_vram_mib": 13348,
+  "retrieved": {
+    "early": "1000003",
+    "mid": "1337774",
+    "late": "1675545"
+  },
+  "needles_ok": true,
+  "finish_ok": true
+}
+   v2-G-q2-c256-n45-ub512-FULL240: ok=True peak=13348 needles=True -> PASS
+>> task02 --model q2 --label v2-F2-q2-n46-ub2048 --spec -ncmoe 46 -b 2048 -ub 2048 -c 131072 -t 16 --cache-type-k q8_0 --cache-type-v q8_0
+{
+  "meta": {
+    "label": "v2-F2-q2-n46-ub2048",
+    "wall_s": 1058.4,
+    "finish_reason": "stop",
+    "content_len": 7070,
+    "reasoning_len": 143854,
+    "prompt_n": 772,
+    "predicted_n": 33928,
+    "predicted_ps": 32.13678933112852,
+    "files_found": [
+      "breaker_events.py",
+      "breaker_state.py",
+      "call_context.py",
+      "circuit_breaker.py"
+    ],
+    "files_missing": []
+  },
+  "probes": {
+    "probe1": "PASS",
+    "probe2": "PASS",
+    "probe3": "PASS",
+    "probe5": "PASS",
+    "probe4_control": "FAIL_expected"
+  },
+  "gate4_pass": true,
+  "crash": null
+}
+>> task02 --model iq3 --label v2-F2-iq3-n46-ub2048 --spec -ncmoe 46 -b 2048 -ub 2048 -c 131072 -t 16 --cache-type-k q8_0 --cache-type-v q8_0
+{
+  "meta": {
+    "label": "v2-F2-iq3-n46-ub2048",
+    "wall_s": 1645.3,
+    "finish_reason": "stop",
+    "content_len": 7935,
+    "reasoning_len": 203239,
+    "prompt_n": 772,
+    "predicted_n": 48221,
+    "predicted_ps": 29.69515543393343,
+    "files_found": [
+      "breaker_events.py",
+      "breaker_state.py",
+      "call_context.py",
+      "circuit_breaker.py"
+    ],
+    "files_missing": []
+  },
+  "probes": {
+    "probe1": "PASS",
+    "probe2": "PASS",
+    "probe3": "PASS",
+    "probe5": "PASS",
+    "probe4_control": "FAIL_expected"
+  },
+  "gate4_pass": true,
+  "crash": null
+}
+CHAIN_DONE

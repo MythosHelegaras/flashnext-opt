@@ -1,0 +1,48 @@
+
+===== [00:41:46] B-FULL-b4096-ub4096-n44
+-ncmoe 44 -t 16 -b 4096 -ub 4096 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0
+loaded 12606 MiB; full prompt going in
+FULL FAIL: Remote end closed connection without response
+
+===== [00:44:12] B-FULL-b2048-ub2048-n43
+-ncmoe 43 -t 16 -b 2048 -ub 2048 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0
+loaded 12296 MiB; full prompt going in
+FULL FAIL: Remote end closed connection without response
+
+===== [00:48:32] B-FULL-b2048-ub1024-n42
+-ncmoe 42 -t 16 -b 2048 -ub 1024 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0
+loaded 12796 MiB; full prompt going in
+{
+  "FULL_prompt_n": 120182,
+  "FULL_prefill_ps": 288.2474993350607,
+  "FULL_TTFT_s": 416.940304,
+  "FULL_decode_ps": 19.64886425251455,
+  "peak_vram_mib": 13982,
+  "retrieved": {
+    "early": "1000003",
+    "mid": "1337774",
+    "late": "1675545"
+  },
+  "needles_ok": true,
+  "finish_ok": true
+}
+!! B-FULL-b2048-ub1024-n42 peak 13982 > 13400 -> retry at ncmoe 43
+
+===== [00:56:07] B-FULL-b2048-ub1024-n42-retry-n43
+-ncmoe 43 -t 16 -b 2048 -ub 1024 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0
+loaded 11884 MiB; full prompt going in
+{
+  "FULL_prompt_n": 120182,
+  "FULL_prefill_ps": 284.28745650161466,
+  "FULL_TTFT_s": 422.748163,
+  "FULL_decode_ps": 19.53189807818189,
+  "peak_vram_mib": 13070,
+  "retrieved": {
+    "early": "1000003",
+    "mid": "1337774",
+    "late": "1675545"
+  },
+  "needles_ok": true,
+  "finish_ok": true
+}
+PHASE B FULL DONE

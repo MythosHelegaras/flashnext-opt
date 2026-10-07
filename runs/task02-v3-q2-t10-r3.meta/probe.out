@@ -1,0 +1,9 @@
+
+[stderr]
+Traceback (most recent call last):
+  File "/home/zef/flashnext-opt/runs/task02-v3-q2-t10-r3/probe.py", line 1, in <module>
+    import breaker_events, circuit_breaker as cb
+  File "/home/zef/flashnext-opt/runs/task02-v3-q2-t10-r3/circuit_breaker.py", line 3, in <module>
+    circuit_breaker.NOTIFIER = some_notifier
+                               ^^^^^^^^^^^^^
+NameError: name 'some_notifier' is not defined

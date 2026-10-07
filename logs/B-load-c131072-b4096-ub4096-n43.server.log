@@ -1,0 +1,16 @@
+0.00.108.788 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.109.004 W srv  llama_server: -----------------
+0.00.109.005 W srv  llama_server: CORS is set to allow all origins ('*') and no API key is set
+0.00.109.006 W srv  llama_server: this can be a security risk (cross-origin attacks)
+0.00.109.006 W srv  llama_server: more info: https://github.com/ggml-org/llama.cpp/pull/25655
+0.00.109.006 W srv  llama_server: -----------------
+0.00.110.211 I srv    load_model: loading model '/mnt/ai/llm/models/qwen3.8-flash-next/UD-Q2_K_XL/Qwen3.8-Flash-Next-UD-Q2_K_XL-00001-of-00003.gguf'
+0.00.790.833 W llama_model_loader: tensor overrides to CPU are used with mmap enabled - consider using --load-mode none for better performance
+0.01.892.295 W llama_kv_cache: attention rotation force disabled (LLAMA_ATTN_ROT_DISABLE)
+0.01.893.685 W llama_kv_cache: attention rotation force disabled (LLAMA_ATTN_ROT_DISABLE)
+0.02.034.877 I cmn          init: llama threadpool init, n_threads = 16
+0.02.181.939 I srv    load_model: initializing, n_slots = 1, n_ctx_slot = 131072, kv_unified = 'false'
+0.02.184.792 I srv          init: chat template supports preserving reasoning, consider enabling it via --reasoning-preserve
+0.02.184.828 I srv  llama_server: model loaded
+0.02.184.833 I srv  llama_server: listening on http://127.0.0.1:9997
+0.07.006.358 I srv    operator(): operator(): cleaning up before exit...

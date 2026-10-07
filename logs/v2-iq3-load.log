@@ -1,0 +1,9 @@
+MemAvailable:   92031856 kB
+{"label": "v2-C-iq3-load-n42-ub512", "load_s": 24.0, "load_vram_mib": 13532, "board_free_mib": 1943}
+{"label": "v2-C-iq3-load-n43-ub512", "load_s": 8.0, "load_vram_mib": 12570, "board_free_mib": 2905}
+{"label": "v2-C-iq3-load-n44-ub512", "load_s": 4.0, "load_vram_mib": 11432, "board_free_mib": 4043}
+{"label": "v2-C-iq3-load-n46-ub512", "load_s": 4.0, "load_vram_mib": 9532, "board_free_mib": 5943}
+{"label": "v2-C-iq3-load-n47-ub512", "load_s": 4.0, "load_vram_mib": 8570, "board_free_mib": 6905}
+{"label": "v2-C-iq3-load-n44-ub1024", "load_s": 4.0, "load_vram_mib": 11638, "board_free_mib": 3837}
+{"label": "v2-C-iq3-load-n46-ub2048", "load_s": 4.0, "load_vram_mib": 10150, "board_free_mib": 5325}
+CHAIN_DONE

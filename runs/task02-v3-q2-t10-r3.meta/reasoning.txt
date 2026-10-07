@@ -1,0 +1,1601 @@
+We need answer user's request. Need write four files content? Likely provide code for each file. Need satisfy all constraints. Need think through design carefully.
+
+We need produce Python 3.14 stdlib only, no async. Four files:
+1 breaker_state.py enum BreakerState with exactly CLOSED, OPEN, HALF_OPEN. Authored by caller's policy layer, never decided inside breaker's failure path. Document each member.
+2 call_context.py immutable type CallContext with exactly three fields duration_ms int, endpoint str | None, caller_state BreakerState. caller_state load-bearing: must reach subscribers unchanged. Breaker must not filter, remap, reinterpret it.
+3 breaker_events.py subscriber contract. Define callback signatures notifier supports, document. Do NOT implement notifier. Assume module-level NOTIFIER object exists exposing:
+NOTIFIER.emit_call_failed(breaker_name, context, failure_count, threshold)
+NOTIFIER.emit_call_succeeded(breaker_name, context, current_state)
+NOTIFIER.emit_breaker_opened(breaker_name, context)
+Describe exact guarantees each carries.
+Need maybe create a Protocol? Define callback signatures? The instruction: "Define the callback signatures the notifier must support, and document them." Could define Protocol Notifier? But also "assume a module-level NOTIFIER object exists exposing". Maybe file should define constants or function signatures? We can define Protocol `Notifier` with methods and maybe variable annotation NOTIFIER: Notifier? But "Do NOT implement the notifier itself — assume a module-level NOTIFIER object exists exposing". If define NOTIFIER = ??? No. Could define protocols or callable aliases. Need likely define callback signatures as function stubs? But not implement notifier. Maybe use `Protocol`:
+class CallFailedListener(Protocol): def __call__(...) -> None: ...
+class CallSucceededListener... etc.
+But notifier object emits. We can define:
+from typing import Protocol
+class BreakerNotifier(Protocol):
+   def emit_call_failed(...): ...
+   def emit_call_succeeded(...): ...
+   def emit_breaker_opened(...): ...
+Then document guarantees. But user says "assume a module-level `NOTIFIER` object exists exposing: ..." Could we declare `NOTIFIER: "BreakerNotifier"` but no assignment. That is type annotation only, not implementation. However at runtime, `NOTIFIER` doesn't exist. The circuit_breaker will reference global NOTIFIER; if no global, NameError. But in production assume exists. In file breaker_events.py maybe `NOTIFIER: "BreakerNotifier"` annotation only. But if imported, `NOTIFIER` not defined (unless `from __future__ import annotations`? annotation doesn't define). That is okay as marker? But circuit_breaker needs global NOTIFIER. Could define fallback? No, do not implement notifier. But if no NOTIFIER at import time, circuit_breaker may NameError on call. It's acceptable per assumption? The code would be unusable standalone, but requested assume NOTIFIER exists. To avoid import-time NameError, don't reference global until call. We can do:
+from breaker_events import NOTIFIER
+But if breaker_events doesn't define NOTIFIER, ImportError. Could import as optional with try? But then implementation? Better maybe in circuit_breaker do:
+if TYPE_CHECKING: from breaker_events import NOTIFIER
+... inside functions: notifier = globals().get("NOTIFIER")? But spec says NOTIFIER is sole point of contact. Could do `from breaker_events import NOTIFIER` and rely on external module defining it? But if breaker_events just annotation, NameError? Hmm.
+
+Maybe breaker_events.py should define a module-level global `NOTIFIER` as a placeholder protocol object? But "Do not implement notifier". Could define `NOTIFIER` as a sentinel object with no methods? That may be implementation? Better not. Could define `NOTIFIER` as an empty module-level variable using `globals().get`? no.
+
+Alternative: circuit_breaker.py does not import breaker_events, uses global `NOTIFIER` resolved at runtime. But linters may complain. We can write:
+_NOTIFIER_GLOBAL = globals().get("NOTIFIER")? But per spec sole point of contact. If module has no NOTIFIER, but external system sets `circuit_breaker.NOTIFIER`? Need exactly "NOTIFIER is its sole point of contact." This can be a global attribute. If we reference `NOTIFIER` in code, Python resolves global at runtime. We can avoid import. Add type annotation maybe:
+_NOTIFIER: "BreakerNotifier" = ... no assignment? Need avoid NameError if no assignment. Could use `TYPE_CHECKING` and inside functions: `notifier = globals()["NOTIFIER"]`. That references global. But if caller didn't set, KeyError. Assumed. This avoids needing import. However user wants four files, probably want `breaker_events.py` defines signatures and maybe NOTIFIER protocol. Circuit breaker can import `NOTIFIER` from breaker_events? If no assignment, fail. Could use import inside functions? Still fail if module no assignment. Could conditionally assign fallback no-op? But "Do NOT implement the notifier itself". Fallback no-op would be implementing. Avoid.
+
+Could in breaker_events.py define:
+class _NotifierProtocol... 
+# Module-level NOTIFIER object is expected to be injected by the application.
+# Do not define it here.
+That doesn't define NOTIFIER. Then circuit breaker maybe does not import; code uses global. But file still separate. To satisfy "NOTIFIER is its sole point of contact", global variable name.
+
+Could create module-level function `_notifier()` returning `globals()["NOTIFIER"]`. That's fine. Use try/except? If missing, maybe warnings? But spec assumes exists. Maybe raise AttributeError? Not asked. Could just access.
+
+Need behavior details.
+
+Invariant discipline: mutate first then notify. Subscriber may synchronously call back into same method that notified it. Need guard in post-mutation state before first notification. This is subtle. For record_failure on not open:
+- Validate context. Drop negative duration with warnings. What about other invalid? exactly negative duration_ms. If invalid, drop with warning, not emit. Does not mutate. If valid:
+  - mutate: increment failure_count.
+  - Determine if now at threshold. Need if failure_count >= threshold? If already at threshold? If already open, ignore entirely. So if self._state is OPEN: return before mutate. If not open: increment, then if new_count == threshold (or >=) set state OPEN, then emit call_failed with context, failure_count, threshold. Then if opened now emit breaker_opened. But invariant says guard in post-mutation before notification. If subscriber calls record_failure reentrantly while in first record_failure, the state/count must already reflect mutation. But what about preventing duplicate transitions? Since state set to OPEN before notify, reentrant call sees OPEN and ignores. Good.
+But order: The spec says when count reaches threshold, transitions to OPEN and emits breaker_opened. record_failure increments and emits call_failed. Which emits first? Need call_failed always emitted on failure. When threshold reached, also emit opened. The order can be either call_failed then breaker_opened, or opened then call_failed? Spec: record_failure increments and emits call_failed with full context. When count reaches threshold, transitions to OPEN and emits breaker_opened. Likely emit call_failed then breaker_opened. But invariant: if subscriber callback on call_failed reentrantly calls record_failure, must see count incremented and state open if threshold reached. So set state before any notification. Need emit call_failed with current failure_count. After call_failed subscriber, if reentrant record_failure sees open and ignores. But if state not set before call_failed, reentrant could increment again. So set state before call_failed. But if set state before call_failed, then emit breaker_opened after call_failed. Is there a risk if subscriber in call_failed tries record_success? state OPEN so no reset. Good.
+However consider reentrant subscriber to call_failed when threshold reached: if state already OPEN, ignores, so no duplicate opened. Good.
+What about if reentrant subscriber to call_failed before breaker_opened? No issue.
+
+For record_success:
+- Validate. If invalid drop.
+- Emit call_succeeded with current_state. But invariant: any guard in post-mutation before first notification. record_success mutates failure count to zero if not open before notification. So must mutate reset first, then emit call_succeeded. current_state should be post-mutation? The argument called current_state. Spec: record_success emits call_succeeded and, if not open, resets failure count to zero. It doesn't specify if current_state is state at call time or post mutation. Since caller_state is caller's view. `current_state` in notifier likely breaker's current state after mutation? The guarantee must describe. It might be important. If method mutates state, emit after mutation. So `current_state` should be breaker state after possible reset (which for not open remains same, count zero; open unchanged). Need maybe if not open, set count 0 before emit. State remains not open. Could emit after reset.
+But reentrancy: If subscriber calls record_failure inside success notification, it sees failure count zero. Good.
+Also record_success should emit even if open. If open, emits call_succeeded with current_state OPEN and does not reset count. The state is open. If caller_state is some arbitrary state from caller policy, not breaker state? Hmm record_success has context.caller_state. But event current_state is breaker's state. If breaker is HALF_OPEN? There is no auto transition to CLOSED. Reset() returns CLOSED. No method to set HALF_OPEN except construction? Hmm caller_state is caller policy, not breaker. Breaker's internal state can be CLOSED, OPEN, maybe not HALF_OPEN? But constructor doesn't allow state. reset returns CLOSED. Could never be HALF_OPEN unless? Maybe not. But enum has HALF_OPEN because caller policy may pass caller_state HALF_OPEN. Breaker internal state maybe initially CLOSED. It never becomes HALF_OPEN by itself. But `current_state` can be CLOSED/OPEN. But event contract says current_state. Document.
+Wait: "The breaker holds NO references to any other system. NOTIFIER is its sole point of contact." So no caller_state stored? Maybe internal state field. It doesn't use caller_state except passing through. It must not filter, remap or reinterpret it. So don't use caller_state in logic except maybe validation? Should not. Use only context object. But validation: negative duration. We must not inspect caller_state. Good.
+Need maybe CallContext validation in __post_init__? If negative duration, spec says invalid input negative duration_ms dropped with warning, not exception. If CallContext is immutable type maybe validate? If validate raising, conflict. Could make CallContext not validate. Use warnings in breaker. If constructing negative context raises if dataclass __post_init__, not desired? Could still not raise? But better dataclass doesn't validate. Could use frozen dataclass with annotations. Exactly three fields. Need no extra methods maybe. Use `@dataclass(frozen=True, slots=True)`? Python 3.14 supports slots. Could use `__slots__`? Exactly fields. Maybe:
+@dataclass(frozen=True, slots=True, eq=True, repr=True)
+class CallContext:
+    duration_ms: int
+    endpoint: str | None
+    caller_state: BreakerState
+Docstring. Immutable. But if duration negative allowed construction? Yes. Maybe not validate. Could validate non-negative? But invalid dropped in breaker, not necessarily at construction. The spec doesn't require CallContext rejects negative. So don't.
+Potential issue: `endpoint: str | None` needs no import. Python 3.14 supports union. `BreakerState` imported.
+
+BreakerState: exactly three members. Could be `class BreakerState(enum.Enum):` with values auto? Members docstrings? How to document enum members? You can't attach docstrings directly except comment? Need Docstrings on every enum member. Python docstrings for enum members can be set via `_docs`? There is not member.__doc__ assignment possible? Yes enum members are instances, you can set `BreakerState.CLOSED.__doc__ = "..."` after class? But docstrings on every enum member? Better use `enum.Doc`? Python 3.11? There is no built-in Doc except maybe `enum.Doc`? Actually PEP 731? In Python 3.14? Could simply write class with comments? But "docstrings on every public class, method and enum member." We need ensure each enum member has __doc__ accessible. Can define enum with `__doc__`? For members:
+class BreakerState(Enum):
+    """..."""
+    CLOSED = auto()
+    OPEN = auto()
+    HALF_OPEN = auto()
+
+BREAKER_STATE_DOCS = {...}
+for member, doc in ...: member.__doc__ = doc
+But assignment may not be considered docstring literal but satisfies accessible. Could use dataclass `enum.Doc`? I recall `enum` has `Doc` in 3.11? Let's recall: Python enum `Doc` alias for `dataclasses.InitVar`? Hmm There is a feature to assign docstrings in enum class body using `enum.Doc`:
+import enum
+class Colors(enum.Enum):
+    RED = enum.Doc('red')? Not exactly. There is PEP 731? `enum` supports `enum.member.Doc`? Let me remember.
+In Python 3.11, `enum.Doc`? I know `enum` can use `enum.auto` and there is `enum.member.Doc`? Actually `enum.Doc` is in Python 3.11? The docstring can be done:
+class Planet(enum.Enum):
+    """Doc for enum"""
+    MERCURY = enum.Doc("Mercury")
+    VENUS = enum.Doc("Venus")
+    ...
+But then values? Maybe no values? In Python 3.14? We can't rely? Safer: set __doc__ after.
+But can we assign to enum member __doc__? Enum members are instances of enum class, but `__doc__` attribute? They may have a `__doc__` attribute from class? Can set instance attribute? If `__slots__` not used. `EnumMember` allows setting __dict__? I think yes: `Color.RED.__doc__ = '...'`. But enum members can be dynamic. Let's test mentally: enum members have `__doc__` inherited from class? Assignment likely works. Could define:
+class BreakerState(Enum):
+    CLOSED = "closed"
+    OPEN = "open"
+    HALF_OPEN = "half_open"
+
+    __doc__ = "..."
+...
+BreakerState.CLOSED.__doc__ = """...
+"""
+This is not exactly docstring literal but acceptable? Maybe they want literal docstrings. Could use comments? Hmm.
+Could define enum members with docstrings using `__doc__` inside member? Not possible. There is a trick:
+class BreakerState(Enum):
+    CLOSED = enum.auto(), "Closed ..."
+    OPEN = enum.auto(), "Open ..."
+    HALF_OPEN = enum.auto(), "Half-open ..."
+Then `_value_` tuple includes doc, not nice. And `__doc__` not set. Could define `__new__` and assign `member.__doc__ = docs`? In Enum class with custom `__new__`, can set:
+class BreakerState(Enum):
+    CLOSED = enum.auto()
+    OPEN = enum.auto()
+    HALF_OPEN = enum.auto()
+    def __init__(self):
+       ...
+But docs? Could use `_docs` mapping in `_generate_..._`? Too much.
+Alternative use `StrEnum`? no.
+
+Maybe simplest: Use Python 3.14 `enum.Doc`? Need verify. I recall Python 3.11 docs: "New `enum.member.Doc` alias for `enum.property.Doc`?" Let's recall exact syntax. I have seen:
+from enum import Enum, Doc
+
+class Planet(Enum):
+    """Planets."""
+    MERCURY = Doc("Mercury")
+    VENUS = Doc("Venus")
+This is if values not needed. Then values are None? Hmm In 3.11? There is `enum.member.Doc`? Let's search memory: Python 3.11 added `enum.member` and `enum.property`? There is `enum.member` as alias for `enum.property`? The feature: enum members can have docstrings via `Doc` (formerly `property`?) I recall syntax:
+import enum
+
+class Planet(enum.Enum):
+    """Doc for enum"""
+    MERCURY = enum.member("Mercury", doc="The closest planet")
+    VENUS = enum.member("Venus")
+
+But not sure. In Python 3.14 standard library may have `enum.member.Doc`. But user requested Python 3.14, could use `enum.member.Doc`. However if syntax wrong, code broken. Need robust. Setting __doc__ after definitely works? Let's ensure. Try mental:
+>>> class E(Enum): X=1
+>>> E.X.__doc__ = 'hi'
+I think AttributeError? Enum members might have `__slots__ = ['_name_', ...]`, no `__doc__`. But docs say `__doc__` attribute of member can be set? There is no slots? In Python 3.11, to enable member docstrings, they added `enum.Doc`. In 3.14 likely yes. If using assignment on members maybe allowed in 3.11+. If not, code fails. Could use a dataclass with custom `__doc__` field? But enum exactly three members. Could set `__doc__` in class body via `BreakerState = enum.Enum("BreakerState", {...})` with docs? The functional API supports docs? For each member, maybe:
+BreakerState = enum.Enum('BreakerState', {
+ 'CLOSED': enum.auto(),
+ 'OPEN': enum.auto(),
+ 'HALF_OPEN': enum.auto()
+})
+Then assign.
+
+Maybe better to use `enum.member.Doc`. Let's verify syntax. I recall from Python docs: `enum.member(value, names, module, qualname, type, start)`? There is also `enum.member.Doc(docstring, init=False)`? Let's search memory internally: PEP 413? In `enum` module there is `auto` and `member`. The class `Enum` has `_generate_next_value_`. Docs: 
+class Planet(Enum):
+    MERCURY = (3.302e+23, 0.704)
+    ...
+`EnumType.__new__` supports `member_name: 'Doc("...")'`? Hmm.
+I remember seeing code:
+class Color(Enum):
+    RED = enum.member(1, doc="Red color")
+    GREEN = enum.member(2)
+Maybe `enum.member` function returns something with doc. But user requires enum, maybe acceptable. But exact three members. Use `enum.member`? Need know Python 3.14. Could avoid reliance by assignment after. It's likely OK. Let's test possible: EnumMeta defines members instances. `__setattr__` prevents changing attributes except? `DynamicClassAttribute`? Enum members are instances of dynamic class. The dynamic class may define `__slots__ = ('name', 'value', '_name_', '_value_', ...)`. In docs: Enum members have `name`, `value`, `__objclass__`, `__objclass__`. `__doc__` maybe inherited but not instance slot? Setting E.X.__doc__ works if no slots or `__doc__` in slots. I recall in 3.11 you could set `__doc__`: https://docs.python.org/3.11/whatsnew/3.11.html enum: docstrings for members can be assigned via `enum.member.Doc` or direct assignment? Example: `Color.RED.__doc__ = "Red"` might work. But not 100% sure.
+Could use a helper after class:
+_DOCS = {...}
+for _name, _doc in _DOCS.items():
+    getattr(BreakerState, _name).__doc__ = _doc
+This is not docstring literal but provides docs. It might satisfy docstring on enum member. We can also write comments before each member.
+
+Need ensure enum exactly three members: no aliases if values same. Use unique values. Could use `enum.auto()`. If setting __doc__ after, no extra members. Good.
+
+BreakerState docstring: The value authored by caller policy, never decided inside breaker failure path. Each member doc: CLOSED: caller believes no breaker restrictions? OPEN: caller believes downstream circuit is open? HALF_OPEN: caller believes trial? Need not overdo.
+
+CallContext: Could make `__slots__` and frozen. Maybe include `__post_init__`? Avoid validation. Need no extra fields. Could add helper methods? No features not requested. Could keep minimal.
+
+breaker_events: Need define callback signatures. Could create protocols for callbacks and notifier. But if not implemented. Use typing Protocol? Need import `Protocol`? Standard library typing. Python 3.14. Use `from typing import Protocol`. Define class `Notifier` Protocol. Methods signatures exactly with return None. Use `CallContext` imported and BreakerState imported. Use `int`, `str | None`. Document exact guarantees.
+
+But "Do NOT implement the notifier itself". Protocols are not implementations, stub methods with `...`. Does `...` implementation count? It's just protocol. Good. Could define:
+class CallFailedSubscriber(Protocol):
+    def __call__(self, breaker_name, context, failure_count, threshold) -> None: ...
+But spec wants notifier emits not subscribers callbacks. Maybe callback signatures are subscriber callbacks. Could define:
+CallFailedCallback = Callable[[str, CallContext, int, int], None]
+CallSucceededCallback = Callable[[str, CallContext, BreakerState], None]
+BreakerOpenedCallback = Callable[[str, CallContext], None]
+
+Then notifier protocol. But if using TypeAlias, `from typing import Callable, TypeAlias`. In 3.14 no type stubs. Could just use callable aliases.
+Maybe best:
+from typing import Callable, Protocol
+CallFailedCallback: TypeAlias = Callable[[str, CallContext, int, int], None]
+CallSucceededCallback: TypeAlias = Callable[[str, CallContext, BreakerState], None]
+BreakerOpenedCallback: TypeAlias = Callable[[str, CallContext], None]
+
+class BreakerNotifier(Protocol):
+    def emit_call_failed(self, breaker_name: str, context: CallContext, failure_count: int, threshold: int) -> None: ...
+    def emit_call_succeeded(self, breaker_name: str, context: CallContext, current_state: BreakerState) -> None: ...
+    def emit_breaker_opened(self, breaker_name: str, context: CallContext) -> None: ...
+
+Could also define a module-level annotation for NOTIFIER:
+NOTIFIER: "BreakerNotifier"
+But as annotation alone no definition. If circuit_breaker imports, fail. We can instead put `if TYPE_CHECKING: NOTIFIER: BreakerNotifier = ...`? Still no runtime. Could avoid importing. Maybe in circuit_breaker use `notifier = _NOTIFIER`? But not defined. We need a way to access external NOTIFIER without import. Maybe:
+_NOTIFIER_NAME = "NOTIFIER"
+def _notifier() -> BreakerNotifier:
+   return globals()[_NOTIFIER_NAME]
+But if not set, KeyError. Could add a fallback module-level annotation. Hmm.
+Maybe the application imports `circuit_breaker` and before using sets `circuit_breaker.NOTIFIER = some_notifier`. If code uses global NOTIFIER, no import needed. This satisfies NOTIFIER sole point. We can define in circuit_breaker:
+# Externally supplied module-level notification object.
+NOTIFIER: "BreakerNotifier"
+But no assignment? If annotation only, NOTIFIER does not exist in globals. When code executes `NOTIFIER.emit...`, NameError if not assigned. If caller assigns before method call, okay. But if code uses `if TYPE_CHECKING: from breaker_events import BreakerNotifier` to get type. At runtime no import. But code referencing NOTIFIER global variable that may not exist until set. That's fine.
+But if the code references `NOTIFIER` directly, Python compiles to LOAD_GLOBAL with no initialization. If not set, NameError. Good. To satisfy type checker, can declare:
+if TYPE_CHECKING:
+    from breaker_events import BreakerNotifier
+    NOTIFIER: BreakerNotifier
+else:
+    # No definition; runtime expects caller to set module attribute.
+    pass
+This means at runtime breaker_events import not done unless type checking. But type checkers will see NOTIFIER as variable not defined? It's defined under TYPE_CHECKING only. Good.
+Could include a helper:
+def _notifier() -> "BreakerNotifier":
+    return NOTIFIER
+Then method calls `notifier = _notifier()`. If not set, NameError. But if external not set before use, failure. Assumed. Good.
+
+Need ensure mutate first. Let's design class:
+
+class CircuitBreaker:
+    """
+    A single-failure-counter circuit breaker that reports events through NOTIFIER.
+    """
+    __slots__ = ("_name", "_failure_threshold", "_failure_count", "_state")
+
+    def __init__(self, name: str, failure_threshold: int = 5) -> None:
+        """..."""
+        self._name = name
+        self._failure_threshold = failure_threshold
+        self._failure_count = 0
+        self._state = BreakerState.CLOSED
+
+Properties? Not requested. Avoid features. Public methods only. Could not add state property. Could expose? no.
+
+    def record_failure(self, context: CallContext) -> None:
+        """..."""
+        if not self._is_valid_context(context): # but method private? okay?
+            warnings.warn(...)
+            return
+        if self._state is BreakerState.OPEN:
+            return
+        self._failure_count += 1
+        should_open = self._failure_count >= self._failure_threshold
+        if should_open:
+            self._state = BreakerState.OPEN
+        notifier = _notifier()
+        notifier.emit_call_failed(self._name, context, self._failure_count, self._failure_threshold)
+        if should_open:
+            notifier.emit_breaker_opened(self._name, context)
+
+But reentrancy: Suppose record_failure at threshold sets state OPEN, emits call_failed. Subscriber reentrant calls record_failure. It sees state OPEN, returns, no further events. Good. Then emits breaker_opened after callback. But wait: the outer call is executing record_failure; subscriber may have already reentered, but outer still in call_failed after reentrant. It will proceed to emit breaker_opened. Good.
+What if subscriber to call_failed calls reset()? Then state CLOSED, count zero before outer emits breaker_opened. Then outer emits breaker_opened based on `should_open` True even though state changed by nested reset. That could violate "exactly once per transition to OPEN"? Scenario: record_failure reaches threshold, state set OPEN, emit call_failed. Nested reset returns CLOSED emits nothing. Outer then emits breaker_opened, even though no currently open? The method mutated to OPEN before first notification, but subscriber can mutate further. The event would announce OPEN after reset. Is that acceptable? Probably yes? But invariant: guard in post-mutation before first notification; after notification, nested calls can change state. The event is generated from initial transition; maybe still should fire because transition occurred. But if nested reset before opened emitted, could emit opened while state CLOSED. Is that bad? Could avoid by checking state before emitting opened? But if check before, must be post-mutation; state OPEN at that point, but nested changed. If we check just before emit, it's after notification, guard changed. Spec: breaker_opened must fire exactly once per transition to OPEN. Since transition did occur, even if reset nested before notification, perhaps emit once. But if nested reset then outer emits opened after CLOSED, subscriber sees OPEN event without state? Events don't carry state. Could be okay. But if another nested record_failure after reset increments to 1 not open, then outer emits opened with old context after state not open. Weird but not impossible. Could avoid by emitting opened before call_failed? Then transition event first, but record_failure must emit call_failed. Spec doesn't require order. If emit opened before call_failed, then reentrant in opened sees state OPEN; after opened returns, call_failed emitted. This avoids nested reset in call_failed from causing opened after reset. But call_failed with state OPEN is fine. Does invariant require call_failed emitted after mutation? yes. If state set OPEN before opened. Could emit opened then call_failed. But subscriber to opened may call record_failure; sees OPEN ignored. Then outer emits call_failed. Good. But spec phrase: record_failure increments and emits call_failed. When count reaches threshold, transitions to OPEN and emits breaker_opened. Could interpret emit call_failed, then if opened, emit opened. Order unspecified. Which better for reentrancy? Maybe emit opened before call_failed? Need think of guarantee: call_failed emitted for every accepted failure, including threshold. breaker_opened emitted exactly once per transition. It might be useful to notify call_failed before opened to allow failure handling. But if nested in call_failed reenters, state open guard prevents additional increments. If opened after, duplicate not issue. If nested resets before opened, potential out-of-order. Could emit opened after call_failed only if still open? But nested reset would suppress opened, missing transition? The transition did happen in outer but reset happened before event delivered. Is it necessary to deliver opened? Probably yes? But maybe "transition to OPEN" should be atomic: state OPEN and opened event before any notification? But impossible: notifications are how to observe. If you emit opened first, no nested reset can suppress unless in opened subscriber. If opened subscriber resets, still emit opened already. Fine. If call_failed first, nested reset can suppress. To guarantee exactly once, emit opened first after state set. But spec also record_failure emits call_failed; if we emit opened before call_failed, it's still after mutation. The transition event is before call_failed. Does this violate "record_failure increments and emits call_failed"? No, order not specified. It might violate expectation call_failed should fire before opened? Not specified.
+
+Could set state OPEN and emit call_failed then opened, but guard reentrancy by using local `opening` flag? We can ensure opened emitted even if nested reset. If nested reset before opened, opened emitted after nested. That's one per transition. It will fire. If nested reset calls record_failure and reaches threshold? Since outer state was OPEN but nested reset made CLOSED and count 0. Nested record_failure increments maybe not open. Then outer emits opened based on original `should_open` True, but count/state may be changed. That means opened after nested failure. Still exactly once per outer transition. But nested failure not opened. Could be odd. Emitting opened before call_failed avoids this. Which is preferable? The invariant says any guard must be in post-mutation before first notification fires. "Guard" probably means open state guard. So setting OPEN before any notification is key. The actual events can be ordered as desired. I'd choose emit call_failed first? The text: "record_failure increments an internal failure count and emits call_failed with the full context. - When the count reaches failure_threshold, the breaker transitions to OPEN and emits breaker_opened." This suggests call_failed first then opened. But invariant discipline may prefer opened first? It doesn't require order. I can document event ordering: on a failure that opens, call_failed is emitted first, then breaker_opened. Or opened before call_failed? Let's examine "When a method both mutates internal state and notifies subscribers, mutate first. Assume any subscriber may synchronously call back into the same method that notified it — a retry handler responding to a failure by issuing another call is normal. Any guard you write must already be in its post-mutation state before the first notification fires." If record_failure first emits call_failed, the guard state OPEN is already set before first notification. Good. So call_failed first is acceptable. Nested reset before opened is an unusual nested mutation. Could still be okay. To prevent duplicate opened from nested calls in opened callback? State set before, so nested sees open. Good. Duplicate only if state not set. So call_failed first is fine.
+
+But what about nested call_failed reentrant before outer emits opened: It sees state OPEN and returns without emitting anything. That's good. If we emitted opened first, nested call_failed sees open returns, then call_failed emitted. Also good. Which to choose? Call_failed first aligns with text and easier.
+
+Now consider record_failure when already open: spec says ignored entirely. Should we validate before ignore? If already open but context invalid negative duration, should drop with warning or ignored entirely? "Invalid input (negative duration_ms) is dropped with a warning" independent. record_failure on already-open is ignored entirely. If open and negative duration: should we warn? Input invalid probably check first. If check invalid first, warning even open. If ignore entirely first, negative duration silently ignored. Which interpretation? Invalid input dropped with warning. Could check invalid before state to always warn. But "ignored entirely" for already-open could mean no events and no failure count; warning is not event. I'd validate first because invalid input always warning. But if already-open and invalid, maybe it's both ignored and invalid. Spec not explicit. Need consistent. record_success invalid? Spec says invalid input dropped with warning. So yes validate first for both. For record_failure already-open valid: return without events or warning. Good.
+
+What about failure_threshold invalid? Constructor takes int. No validation requested. Could accept non-positive. If failure_threshold <=0, first failure count 1 >= threshold => open. But if threshold 0 and state not open, failure increments to 1 and opens. Is that okay? No validation. Do not add features. Could perhaps if threshold <=0? Not requested. Avoid.
+
+Warnings: Use `warnings.warn(..., category=Warning?)`. Should include message maybe. Do not raise. Need not suppress. Could include stacklevel=2. Use standard library. `warnings.warn("CallContext.duration_ms is negative; dropping call event.", Warning, stacklevel=2)` The category maybe `UserWarning`. Need import warnings. Category `UserWarning`. Good. If duration_ms negative, drop and no notifier. The context not mutated. If duration_ms negative but already open? warn. Need helper `_context_is_valid(context: CallContext) -> bool`? If duration_ms < 0. Should type check duration_ms? Only negative. If duration_ms non-int? Type hints only, no runtime. No validation.
+
+Should `record_failure` and `record_success` be reentrant safe? Python single-thread, but reentrant due callback. The code as simple not thread-safe. Not asked. No locks. Locks would violate mutate first? Avoid.
+
+Need NOTIFIER sole point of contact. No references to CallContext? The parameter. Use context object passed to notifier unchanged. No storing. Good.
+
+Need "call_context.py: immutable type". Could use dataclass frozen. It has exactly three fields. Need maybe ensure `duration_ms` can't change. Good.
+
+Need maybe not import warnings in events? no.
+
+Let's craft code with comments/docstrings. Need provide four files perhaps with headers. The final answer likely code blocks for each file. Need not include tests. Could mention how to combine. Need satisfy "Full type hints on every signature." If define helper `_is_valid_context`, private but method needs hints. Could avoid helper to reduce. Use inline.
+
+Let's consider Python 3.14 enum member docstrings. I can write:
+from enum import Enum, auto
+
+class BreakerState(Enum):
+    """State authored by a caller-side policy..."""
+    CLOSED = auto()
+    OPEN = auto()
+    HALF_OPEN = auto()
+
+    __doc__ = ...
+But assigning __doc__ after members is class docstring already. Need member docstrings:
+_DOCS = { ... }
+for _member_name, _member_doc in _DOCS.items():
+    getattr(BreakerState, _member_name).__doc__ = _member_doc
+Could this assignment fail? Need decide. Could instead use comments and maybe accept? User explicitly wants docstrings on enum member. I can attempt to set `__doc__` and if it fails not good. Let's be certain. Maybe `enum.Enum` in Python 3.14 supports setting member `__doc__`? PEP 413? Let's recall docs: `Enum` members support `__doc__`. To create:
+class State(Enum):
+    A = "a"
+    B = "b"
+State.A.__doc__ = "..."
+Maybe yes. There is no restriction on setting attributes of instance? EnumMeta `__setattr__` prevents setting attributes on the class itself except dynamic attributes? But setting attribute on member is normal instance attribute. Since member's type dynamic Enum class defines properties? It may not have `__doc__` slot, but instances of a class can get instance attributes unless slots. Does dynamic Enum class use `__slots__`? In CPython, enum member type defines `__slots__ = ('_name_', '_value_', ...)`, but maybe no `__doc__`. If slots exclude doc, assignment fails. However `__doc__` is class attribute, not instance? Could assign to `__doc__` even with slots? Usually classes have `__dict__` not slots? Dynamic class maybe no dict. Let's check memory: Dynamic class created by EnumMeta uses `__slots__ = ['_module_', '_qualname_', '_name_', '_value_', '_name_', 'name', 'value', '__doc__']`? Maybe includes doc. I think it's safe. Also Python 3.11 added ability to set member docs. So okay.
+
+But maybe code should not rely on setting after because static docstring extraction won't see. But acceptable? Could use `enum.Doc`. Let's verify syntax to use docstrings literally. Searching memory: Python 3.11 docs enum: There is `enum.member(value=..., names=..., module=..., qualname=..., type=..., start=...)` and `enum.property`? Hmm not sure. Could avoid. Setting after is okay.
+
+Could make enum members docstrings via comments:
+class BreakerState(Enum):
+    """..."""
+    CLOSED = auto()
+    """Caller believes..."""
+    OPEN = auto()
+    """Caller believes..."""
+    HALF_OPEN = auto()
+    """Caller believes..."""
+In Python, a string literal after assignment is an expression statement; if assigned to variable? It is not attached to enum member. But docstrings for variable? No. Could set `__doc__` after with explicit `CLOSED.__doc__ = """..."""`. Could include that. Fine.
+
+Need ensure no aliases or extra members in helper. If define `_DOCS` in module, not enum member. Good. But maybe setting __doc__ after in same module. Could also define private function? not needed.
+
+CallContext: use dataclass. Need docstrings for fields? Docstrings on public class, method, enum member. Not fields. Use docstring. Could maybe add `__slots__` to dataclass. Use `slots=True`. Python 3.10+. Good. If `frozen=True`, no methods. Maybe add `__hash__`? Dataclass frozen with eq True provides hash. Could be useful but not requested. Fine.
+
+Maybe need immutable but dataclass slots may prevent subclass adding fields? Good.
+
+Potential issue: Python 3.14 dataclass with `slots=True` and `frozen=True` works. yes.
+
+Could define `endpoint: str | None = None`? The spec fields exactly, not optional defaults? It says carries exactly three fields: endpoint str | None. It can be None. If we add default, still field. But no need. If not default, caller must pass None. Fine. `duration_ms: int`, `endpoint: str | None`, `caller_state: BreakerState`. Could add defaults? no.
+
+Need type hint `endpoint: str | None` with None. Good.
+
+Need maybe avoid mutable default? no.
+
+CircuitBreaker:
+Use global NOTIFIER. How to structure to ensure NOTIFIER not imported? If we annotate under TYPE_CHECKING only, code references NOTIFIER at runtime. However the module itself when executed doesn't define NOTIFIER. If caller sets `circuit_breaker.NOTIFIER`, it defines global. Inside function `notifier = NOTIFIER` looks up global. Good.
+
+But if someone imports circuit_breaker and sets NOTIFIER after import before calls. That's assumed. If not, NameError. Good.
+
+Could make code fail gracefully? If NOTIFIER missing, perhaps warnings? No. Spec assumes exists. No fallback. Could do:
+_NOTIFIER: BreakerNotifier
+But if annotation without assignment doesn't create variable; no import. Could put `NOTIFIER: "BreakerNotifier"` at module top. This does not create variable. In function, `notifier = NOTIFIER` may raise NameError if not assigned. If assigned externally, okay. The annotation in module doesn't conflict.
+
+But for mypy, it sees NOTIFIER as defined under TYPE_CHECKING only? If annotation at module top but no assignment under TYPE_CHECKING? We can define:
+from __future__ import annotations
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from breaker_events import BreakerNotifier
+    NOTIFIER: BreakerNotifier
+else:
+    # Runtime does not define NOTIFIER. The surrounding application must set
+    # this module attribute before a breaker records a call.
+    pass
+
+Then code:
+def _notifier() -> "BreakerNotifier":
+    return NOTIFIER
+
+At runtime, `NOTIFIER` global may or may not exist. If not set, NameError. This meets assumption.
+Potential issue: static checkers may not accept referencing `NOTIFIER` if defined only TYPE_CHECKING? It should. If not, add `assert 'NOTIFIER' in globals()`? That would be runtime and define? Hmm.
+Could define module-level global variable as None placeholder: `NOTIFIER = None` but that implements a fake notifier object? Might violate? It is not notifying. But if used, AttributeError. If not assigned, method fails. But this is a module-level object. Is that implementing NOTIFIER? No. But spec: "assume a module-level NOTIFIER object exists exposing ..." It could be assumed externally. If we set `NOTIFIER = None` in circuit_breaker, then if application sets it, fine. But if it forgot, error later. It might be considered a placeholder implementation? I'd avoid because "Do NOT implement the notifier itself" but `None` not implementing. However "NOTIFIER is its sole point of contact" could be satisfied.
+
+But if `circuit_breaker.py` defines `NOTIFIER = None`, then it is a module-level NOTIFIER object. If application doesn't set, it doesn't expose methods. Could be considered not assuming exists? But not implementing emits. Better no placeholder. But if code imports `breaker_events.NOTIFIER` not defined fail. Hmm.
+
+Alternative: The application might expect to do `from circuit_breaker import CircuitBreaker` and have NOTIFIER already in breaker_events? Maybe NOTIFIER should be in breaker_events.py as module-level object. The text: "Do NOT implement the notifier itself — assume a module-level `NOTIFIER` object exists exposing:" This may mean the module `breaker_events.py` should declare that there is a `NOTIFIER` object, possibly imported/defined externally? Since we are writing breaker_events.py, maybe we should not define NOTIFIER because not implement. But maybe we can put `# NOTIFIER is provided externally.`. Then circuit_breaker could not import it. But user says NOTIFIER is sole point of contact. It can be global in circuit_breaker.
+
+Could use `importlib` to import `NOTIFIER` from `breaker_events` lazily:
+import importlib
+_events = importlib.import_module("breaker_events")
+notifier = getattr(_events, "NOTIFIER")
+But then breaker_events must define NOTIFIER. Could define protocol annotation and maybe not object. Then no.
+
+Maybe better: In breaker_events.py, define protocols and define a sentinel global `NOTIFIER` as an unimplemented protocol? But spec assume module-level object exists exposing those methods. In a codebase, you could import a notifier implementation from another module. In our file we could do:
+# The actual notifier object is injected elsewhere. To keep this module importable
+# as a contract, no NOTIFIER value is defined here.
+No object. So circuit_breaker should not depend on it. It can expect external injection.
+
+Need maybe final answer includes note: `circuit_breaker.py` expects global `circuit_breaker.NOTIFIER` to be set to an object satisfying `BreakerNotifier`. But user said assume exists, not necessarily injection. Could write code referencing global NOTIFIER. Good.
+
+Let's design event contract:
+File: breaker_events.py
+```
+"""Subscriber contract for circuit-breaker notifications.
+...
+"""
+from typing import Protocol
+
+from breaker_state import BreakerState
+from call_context import CallContext
+
+class CallFailedSubscriber(Protocol):
+    def __call__(self, breaker_name: str, context: CallContext, failure_count: int, threshold: int) -> None: ...
+
+...
+```
+But Protocol methods with `...` maybe implementation? Not notifier. Could be okay. But to not define callback implementations? Protocols are stubs. Could use `def ...: raise NotImplementedError`? No, no raise. `...` is pass. Fine.
+
+Maybe define callback signatures as callable aliases only; no Protocol class? User: "Define the callback signatures the notifier must support, and document them." I can define a Protocol with the notifier methods. This defines signatures. Also document guarantees.
+
+Need exact guarantees:
+- emit_call_failed: called synchronously exactly once for each non-ignored failure accepted by breaker after failure_count increment. context unchanged. failure_count is internal count after increment; threshold from breaker config. May be called when already open? No, ignored, so not. May be called when threshold reached and before opened. It does not itself state that breaker is open; check state separately. It guarantees the failed call attempt happened and was accepted.
+- emit_call_succeeded: called synchronously exactly once for each non-ignored success accepted. context unchanged. current_state is the breaker state immediately after the success is processed (failure count reset to zero if not open). It does not itself assert downstream success semantics beyond record_success. Could mention if already open, success is emitted but failure count unchanged and no state transition.
+- emit_breaker_opened: called synchronously exactly once for each transition CLOSED->OPEN? What about HALF_OPEN internal? It never happens. Say exactly once per transition into OPEN, never while already OPEN, never after a successful call in same transition? It carries context of failure that caused transition. It is emitted after state set to OPEN. If subscriber reenters, state is already OPEN and failure_count at threshold. It does not emit again during the same OPEN period.
+Need note ordering: In record_failure that triggers open: call_failed emitted first, then breaker_opened. The state guard is already OPEN before call_failed.
+Could include that callbacks are synchronous; breaker does not catch exceptions from notifier. If callback raises, the event sequence may be incomplete; caller sees exception and internal mutations remain. Is that requested? No. But can document "callbacks should return quickly; exceptions propagate." But maybe not needed. But exact guarantees include. Need be careful: If callback raises, state mutations remain. Is that okay? Yes. If callback raises in call_failed before opened, opened won't fire; transition happened but event missing. That's a consequence of callback failure. Could document. But maybe avoid complexity. Hmm user wants small reusable module, event contract. Exact guarantees should include reentrancy. Could state: "Callbacks are called synchronously on the caller thread. The breaker does not serialize, filter, deduplicate, reorder, or copy events." But dedup for opened.
+
+Potential issue: Since record_success resets before emitting call_succeeded, if success callback raises, count reset but event incomplete. Okay.
+
+Need maybe document "context is passed by reference unchanged". Since CallContext immutable, same object. Good.
+
+Now code details.
+
+Could we use `__slots__` in CircuitBreaker. Methods public. No properties. Constructor docstring. record_failure docstring. record_success docstring. reset docstring.
+
+Let's consider using warnings category. Need maybe not emit event when invalid. Use:
+if context.duration_ms < 0:
+    warnings.warn(
+        "CallContext.duration_ms is negative; dropping circuit-breaker call event.",
+        UserWarning,
+        stacklevel=2,
+    )
+    return
+
+No type validation. But what if `duration_ms` is not comparable? Not requested. Could ignore. But if non-int raises TypeError not warning. Type hints.
+
+Now reentrancy with global NOTIFIER: `_notifier()` returns global. But if subscriber calls method that uses `_notifier()`, okay. If NOTIFIER is not set, NameError inside record_failure after mutation! E.g. if no NOTIFIER, failure_count increment and state open then NameError. Bad. Could resolve notifier before mutation? But NOTIFIER must be sole contact. Should not call notifier before mutation. But to avoid mutating if NOTIFIER missing, we could get notifier reference before mutations. Does that violate invariant? Getting reference before mutation is not notification. It does not affect guards. Could do:
+notifier = _notifier()
+# then validate and mutate.
+If NOTIFIER missing, no mutation. Good. However spec says "When a method both mutates internal state and notifies subscribers, mutate first." Getting notifier before mutation doesn't notify. It's fine. But if method not going to notify due invalid/open, still gets reference; if missing, invalid input would raise NameError instead of warning? Need handle. We can only get notifier when about to notify. But if missing, after mutation is bad. However assumption says exists. For correctness under assumption no issue. If want defensive, get after validation but before mutation:
+if invalid: warn return
+if state OPEN: return
+notifier = _notifier()
+self._failure_count += 1
+...
+This doesn't notify before mutation. Good. But if state open and NOTIFIER missing, returns no error because no notify needed. Good. If valid and not open, resolve notifier before mutation, no notification. Fine. Does this violate "mutate first"? No, no subscriber called. It may read global before mutation. Could static linters see. For record_success, invalid first, then resolve notifier before mutation, then mutate, then notify. Good.
+
+Need maybe not resolve global before mutation? It doesn't matter. But if global lookup has side effects? Global NOTIFIER could be defined via module global; access no side effect. If using import hook? no. Could resolve after mutation as spec; but if missing, side effect. But assumption. I think resolve after mutation is okay under assumption. To be safer, maybe use `_notifier()` after validation but before mutation, then mutate. It still ensures no notification before mutation. But "mutate first" could be interpreted before ANY operation related to notification? Probably not.
+
+Let's write:
+```
+    def record_failure(self, context: CallContext) -> None:
+        if context.duration_ms < 0: ... return
+        if self._state is BreakerState.OPEN: return
+        notifier = _notifier()
+        self._failure_count += 1
+        transition_to_open = self._failure_count >= self._failure_threshold
+        if transition_to_open:
+            self._state = BreakerState.OPEN
+        notifier.emit_call_failed(...)
+        if transition_to_open:
+            notifier.emit_breaker_opened(...)
+```
+This resolves notifier before mutation. Does it matter if `notifier.emit_call_failed` reentrantly calls record_failure? State already open if needed. Good. But if `_notifier()` before mutation and NOTIFIER object's attribute lookup triggers property that calls into breaker? It could, but not notification. Weird. Under assumption fine. Could also resolve after mutation. Which better matches spec? "When a method both mutates internal state and notifies subscribers, mutate first." The code above mutates before notification. It does not mutate before resolving. That's not notification. Fine.
+
+For record_success:
+```
+if invalid: warn return
+notifier = _notifier()
+if self._state is not BreakerState.OPEN:
+    self._failure_count = 0
+notifier.emit_call_succeeded(..., current_state=self._state)
+```
+If notifier lookup before state check but after validation. Could do state check then lookup. If open and notifier missing, no error? But no notification? Actually if open, emits call_succeeded always, so notifier needed. So lookup before notification. Could mutate before lookup too. Simpler: validate, mutate, notifier = _notifier(), emit. If missing after mutation. But assumption. To avoid missing, lookup before mutation. The mutation for success: if not open count=0. We can check state before lookup. Then lookup. Then mutate. Then emit. Good.
+
+Could there be a race in reentrancy: record_success mutates count to 0, emits success. If subscriber calls record_success reentrantly, it mutates count=0 again and emits success. That's fine. If subscriber calls record_failure reentrantly during success, it sees count 0 and increments to 1. After nested returns, outer emits success already happened. Wait order: mutate success (0), emit success. Nested failure increments to 1 and emits failure maybe. After nested returns, outer success notification completes. This results nested failure event before outer success event but success count was already reset. That's fine. If success notification should reflect post-mutation count zero; failure happened after, not before. Good.
+
+Potential reentrancy issue: record_success emits after mutating count zero. If success subscriber calls record_failure and reaches threshold, nested emits call_failed and opened (state OPEN). Then outer success event continues after opened already emitted. Event order nested events before outer success event, which might be weird but due synchronous callback. The guarantee: outer call_succeeded emitted after state mutation but before or after nested events? It is still emitted before returning from outer, but nested events happen during it. This is inherent. Could document "callbacks are synchronous; nested callback notifications may be interleaved." Good.
+
+Could there be an invariant violation because record_success's guard? If success is called during record_failure's call_failed (state open), it should emit success and not reset. It sees state OPEN, emits success. Good. The guard is post-mutation (open) from failure. Good.
+
+Now state representation: Use `_state`. The enum has HALF_OPEN but internal never set to HALF_OPEN. Does record_success if state HALF_OPEN reset count? Since condition `is not OPEN` includes HALF_OPEN. It resets. That seems okay. If internal somehow HALF_OPEN (not possible), success resets. record_failure if not open increments and maybe open. Could HALF_OPEN internal fail threshold and open. Fine.
+
+Could reset() return to CLOSED with zero count and emits nothing. Should set state before/after? No notify. If invalid? reset no input. Good. Reentrant? if called from callback, sets zero. Outer events may follow. okay.
+
+Should reset() also set state post-mutation before no notifications; trivial.
+
+Could `failure_threshold` be stored and used in event. If threshold mutated? No public setter.
+
+Need no other systems. Could not import os/time. Good.
+
+Now code style: Use `from __future__ import annotations`? Python 3.14 doesn't need but okay. However for dataclass with `str | None` no need. Use to make type annotations lazy? Could include. No issue. If use `TYPE_CHECKING`. Good.
+
+Potential issue: In `circuit_breaker.py`, using global `NOTIFIER` not defined will be flagged. We can avoid direct reference by:
+```
+def _notifier() -> "BreakerNotifier":
+    try:
+        return NOTIFIER  # type: ignore[name-defined]
+    except NameError:
+        raise RuntimeError("circuit_breaker.NOTIFIER is not configured")
+```
+But raising not requested. Could define. But not needed.
+
+But if we reference `NOTIFIER` inside `_notifier`, at module import if no variable, function object okay. At call, lookup. Good.
+
+Could use `globals().get("NOTIFIER")` instead. But if not set, returns None, then emit fails AttributeError. Not as nice. Direct global aligns with sole contact.
+
+Now file contents.
+
+Need maybe not create `__all__`? It's okay? Adds feature? Could include? The user asked exactly four files; no extra features. `__all__` not feature. But could skip to minimize.
+
+Could include `#` header filename. Good.
+
+Let's draft each file.
+
+1. breaker_state.py
+```
+"""Breaker states authored by caller-side policy."""
+from enum import Enum, auto
+
+class BreakerState(Enum):
+    """States that a caller's policy layer can believe the breaker is in.
+    This enum is intentionally external to breaker failure logic.
+    """
+    CLOSED = auto()
+    OPEN = auto()
+    HALF_OPEN = auto()
+
+_CLOSE_DOC = """..."""
+...
+for _member_name, _member_doc in {
+    "CLOSED": _CLOSE_DOC, ...
+}.items():
+    getattr(BreakerState, _member_name).__doc__ = _member_doc
+```
+Could the local variables in module become globals; no issue. But setting after maybe overwrites class attribute? okay. Could not use dict to preserve order. Could do:
+```
+BreakerState.CLOSED.__doc__ = """
+Caller-side view: no failure-based restriction is active.
+"""
+...
+```
+No need `_DOCS`.
+Potential issue: Setting `__doc__` on Enum members in class body after members? Need after class. If using assignment after class. Good.
+
+Could include "authored by caller's policy layer, never decided inside breaker's failure path." class doc.
+
+Need enum member docstrings: We can assign. Could the assignment not visible in IDE? Fine.
+
+Maybe Python 3.14 supports member docstrings via `__doc__`; yes.
+
+Let's be safe and not use `enum.Doc`. Use direct assignment.
+
+Could assign class doc after? Class doc string already. Could assign after class with `BreakerState.__doc__ = """..."""`? Not necessary.
+
+2. call_context.py
+```
+"""Immutable description of one downstream call attempt."""
+from dataclasses import dataclass
+from breaker_state import BreakerState
+
+@dataclass(frozen=True, slots=True)
+class CallContext:
+    """
+    Immutable value object describing a single downstream call attempt.
+
+    `caller_state` is caller-authored and must be delivered unchanged.
+    """
+    duration_ms: int
+    endpoint: str | None
+    caller_state: BreakerState
+```
+Could need default for endpoint? no. Could not have methods. Full type hints on signatures: dataclass __init__ generated, not explicit? The class has fields with type hints. The constructor generated no docstring. Is constructor public? Maybe need docstring on every public class, method. Generated __init__ no docstring. Could define __init__ manually? No need? If they check public methods including __init__? We can define __init__? But dataclass generates. Could add docstring to generated `__init__`? E.g. after class: `CallContext.__init__.__doc__ = "..."`. Maybe overkill. But "method" could include __init__. To be safe, define dataclass no auto_init? Too much. Simpler: Use normal immutable class with explicit __init__ and docstring. But exactly three fields and immutability. Dataclass fine. Need docstring on constructor? Could add after:
+```
+CallContext.__init__.__doc__ = """Initialize a CallContext."""
+```
+But generated init signature full type hints. Is __init__ public? yes. Could do. But if dataclass uses `__init__`, it has docstring? no. Add.
+
+Could define custom immutable using `__new__`? Dataclass better. Could include explicit methods not needed.
+
+Should not have extra fields; slots ensures. Could not include `__init__.__doc__` as method.
+
+3. breaker_events.py
+Need docstrings on protocols/methods. Protocol methods are signatures; docstrings for them. Public class `BreakerNotifier`, maybe callback protocols. Need not define NOTIFIER. Could define callback protocols as well. Could be many public classes. The user only requested define callback signatures. Adding callback protocols okay? Maybe not. Could just define `BreakerNotifier`. But if callback protocols, more classes. Might violate not requested? It is requested to define signatures. A notifier protocol with methods is enough. Could include callable type aliases as signatures.
+
+Need full type hints.
+```
+"""Event subscriber contract..."""
+from typing import Protocol
+from breaker_state import BreakerState
+from call_context import CallContext
+
+class BreakerNotifier(Protocol):
+    """..."""
+    def emit_call_failed(self, breaker_name: str, context: CallContext, failure_count: int, threshold: int) -> None:
+        """...
+        """
+        ...
+...
+```
+Docstrings with guarantees. Maybe callback signatures? The methods themselves are callbacks? The notifier methods accept direct calls from breaker. Subscribers implement this protocol or individual methods? The contract "callback signatures notifier must support" maybe exactly these methods. So enough. Could also define type aliases:
+```
+CallFailedCallback = Callable[[str, CallContext, int, int], None]
+...
+```
+But `Protocol` methods not type aliases. Could include both? More features? Probably okay. But no need. Use only Protocol.
+
+However "Define the callback signatures the notifier must support" might mean function types, not object protocol. The notifier exposes methods; protocol defines. Good.
+
+Need NOTIFIER global annotation? Could add:
+```
+# The application is expected to provide a module-level NOTIFIER object that
+# structurally satisfies this protocol.
+if TYPE_CHECKING:
+    NOTIFIER: BreakerNotifier
+```
+But if not importable at runtime. Could use annotation in module doc? I'd avoid defining NOTIFIER here because no assignment. The circuit_breaker's NOTIFIER is external.
+
+Potential problem: The user likely expects `breaker_events.py` to contain NOTIFIER reference, maybe `NOTIFIER = __import__('notifier_impl')`? No, no implementation. So no.
+
+4. circuit_breaker.py
+Need use global NOTIFIER. Could import `BreakerNotifier` from breaker_events for type annotation. But then if breaker_events exists but doesn't define NOTIFIER, import of Protocol only. We need not import NOTIFIER. We can `from breaker_events import BreakerNotifier`. Good. At runtime, breaker_events module defines protocol class. It doesn't define NOTIFIER. Fine. This import does not create NOTIFIER.
+
+But if `breaker_events.py` imports protocols, it imports CallContext, BreakerState. Good. Then circuit_breaker imports those too.
+
+Could in circuit_breaker:
+```
+if TYPE_CHECKING:
+    from breaker_events import BreakerNotifier
+else:
+    from breaker_events import BreakerNotifier  # runtime for annotations? Could import always.
+```
+If import breaker_events, it will import Protocol and dataclasses. Fine. It does not define NOTIFIER, no issue. Then `_notifier()` annotation. Good. But if using `from breaker_events import BreakerNotifier`, at runtime the Protocol class exists, but no NOTIFIER object. Fine.
+
+Should NOTIFIER global annotation:
+```
+NOTIFIER: "BreakerNotifier"
+```
+As mentioned, annotation-only variable. It does not assign; but syntax defines a compile-time declaration only? In a module, a bare annotation does not create the variable in globals, but it does set `__annotations__['NOTIFIER']`. If code executes `NOTIFIER` before assignment, NameError. Good. Could maybe some tools expect assignment. Good.
+
+Need avoid linter errors? We can include:
+```
+# Runtime expects the application to set ``circuit_breaker.NOTIFIER``.
+# No notifier implementation is provided or imported here.
+NOTIFIER: BreakerNotifier
+```
+Then `_notifier()` uses `NOTIFIER`. Good.
+
+But if no assignment, mypy may say variable not defined. Could satisfy with `NOTIFIER: BreakerNotifier` at module scope. It is defined in annotations. Fine.
+
+Maybe use direct global reference in methods without helper:
+```
+        NOTIFIER.emit_call_failed(...)
+```
+Simpler. If not set, NameError. The annotation says it exists. Good. But if we put annotation-only, direct reference compiles. Could use local alias `notifier = NOTIFIER` before mutation. Need ensure type. Good.
+
+Code:
+```
+from __future__ import annotations
+import warnings
+from typing import TYPE_CHECKING
+from breaker_state import BreakerState
+from call_context import CallContext
+from breaker_events import BreakerNotifier
+
+if TYPE_CHECKING:
+    NOTIFIER: BreakerNotifier
+else:
+    # The application must provide this global before recording calls.
+    pass
+```
+If using `else: pass`, NOTIFIER annotation under TYPE_CHECKING only. At runtime no variable. Methods use `NOTIFIER`. For runtime type check, not needed. If code uses `notifier: BreakerNotifier = NOTIFIER`, if no global, NameError. Good.
+Could direct annotation at module scope not conditional? `NOTIFIER: BreakerNotifier` works even if no import? It references BreakerNotifier in annotation string? If using from __future__ annotations, annotation not evaluated. But still no assignment. Could just:
+```
+NOTIFIER: BreakerNotifier
+```
+But static may warn undefined. Better assign placeholder? no.
+
+Maybe use string annotation in `_notifier` to avoid needing annotation variable. But methods need no annotation variable. We don't need module annotation except documentation. Could omit `NOTIFIER: BreakerNotifier` but include comment. Then `_notifier()` annotation string. However direct global `NOTIFIER` undefined. The compiler doesn't care. Could do:
+```
+def _notifier() -> BreakerNotifier:
+    return NOTIFIER  # noqa: F821
+```
+But type checker sees undefined. Add TYPE_CHECKING.
+
+Maybe better: Use a module-level function to get NOTIFIER and type annotate with TYPE_CHECKING. Code:
+```
+if TYPE_CHECKING:
+    from breaker_events import BreakerNotifier
+    NOTIFIER: BreakerNotifier = ...
+```
+Can't assign in TYPE_CHECKING without implementation. Could assign a protocol instance? no. So no assignment.
+
+Could use `import typing; NOTIFIER: typing.TYPE_CHECKING`? no.
+
+Could define `_get_notifier()` returning `BreakerNotifier` by using `globals()`:
+```
+def _get_notifier() -> "BreakerNotifier":
+    return globals()["NOTIFIER"]  # type: ignore[no-any-return]
+```
+This avoids direct undefined name in function? Type checker sees globals returns Any. At runtime NameError/KeyError if missing. It doesn't need module-level annotation. Good! This ensures no static undefined. It is still sole contact. It resolves at runtime. Could use direct global as per requirement. Maybe `globals()["NOTIFIER"]` is indirect but still global name. The module has no NOTIFIER variable until set. Good.
+
+Should we catch KeyError and raise AttributeError? If assumption. Could not catch. But using globals avoids NameError maybe KeyError. Either fine.
+
+Could do:
+```
+def _get_notifier() -> BreakerNotifier:
+    """Return the globally injected notifier object."""
+    return NOTIFIER  # defined at runtime by application
+```
+Maybe type checker issue only if no annotation. Could ignore comments. But code should be production quality.
+
+Let's write with TYPE_CHECKING import and module annotation-only:
+```
+if TYPE_CHECKING:
+    from breaker_events import BreakerNotifier
+
+    NOTIFIER: BreakerNotifier
+```
+But if `breaker_events` is imported only in TYPE_CHECKING, then runtime `_get_notifier` annotation `BreakerNotifier` under from __future__ annotations is string? If method annotation uses `"BreakerNotifier"`, no runtime import. We can also import at runtime for annotation because breaker_events doesn't define NOTIFIER. That is fine. If import runtime, no issue. Let's do normal import at top: `from breaker_events import BreakerNotifier`. Then annotation OK. Also add comment about external NOTIFIER. But then code direct global NOTIFIER might trigger lint undefined. We can use a private helper with global. For lint, not important.
+```
+def _notifier() -> BreakerNotifier:
+    return globals()["NOTIFIER"]
+```
+This avoids NameError? Actually returns KeyError if missing. Could be okay. But if external sets `NOTIFIER`, it is in globals. It's sole contact. Good.
+
+But if using `globals()["NOTIFIER"]`, the global variable name is not directly referenced in bytecode as NOTIFIER? It is global mapping. Is that acceptable? I think yes.
+
+Potential issue: If the application defines `NOTIFIER` in another module and sets as attribute, globals contains. Good.
+
+Alternative direct global is cleaner:
+```
+def _notifier() -> BreakerNotifier:
+    return NOTIFIER
+```
+with `NOTIFIER: BreakerNotifier` annotation-only under TYPE_CHECKING. At runtime if not set, NameError. The function code itself references NOTIFIER. That's explicit. Let's do this? If code imported before NOTIFIER set, function not called. Good. Static maybe fine.
+
+Could avoid NameError during module compilation? Python doesn't require global defined. So direct okay.
+
+Maybe include:
+```
+# This module does not define NOTIFIER. The application is expected to create
+# `circuit_breaker.NOTIFIER` before the first call into record_* methods.
+if TYPE_CHECKING:
+    NOTIFIER: BreakerNotifier
+else:
+    pass
+```
+Then in function:
+```
+notifier = NOTIFIER
+```
+But at runtime `NOTIFIER` may not be defined. Fine. The module annotation in TYPE_CHECKING doesn't create variable. If user type checks with stub, sees. Could be okay.
+
+Maybe better not conditional; module annotation `NOTIFIER: BreakerNotifier` outside TYPE_CHECKING. It will be in `__annotations__` but no global. Does this count as defining? no. If direct global lookup before assignment, NameError. Good. Could use this. Need `BreakerNotifier` imported runtime. Fine. The annotation uses `BreakerNotifier` but with `from __future__ import annotations`, not evaluated at runtime. Without future, annotation evaluated and requires import, which we have. Good. So:
+```
+from breaker_events import BreakerNotifier
+NOTIFIER: BreakerNotifier
+```
+This syntax doesn't assign NOTIFIER, just annotation. Is it allowed? Yes:
+```
+x: int
+```
+No x variable. Good.
+Then in function, `notifier = NOTIFIER` will raise NameError if external not set. Good. The annotation is documentation. Great. Let's do that. No TYPE_CHECKING needed except maybe no. We can import BreakerNotifier. But if user doesn't set NOTIFIER and calls, NameError. Assumption.
+
+Potential issue: The bare annotation inside class body vs module. We need global. At module scope before class. Good.
+
+Could static tools complain variable used before assignment? maybe. But we can add comment.
+
+Now if we import breaker_events, which imports call_context. Good. No circular imports: breaker_events doesn't import circuit_breaker. breaker_state independent, call_context imports breaker_state. circuit_breaker imports breaker_state, call_context, breaker_events. Good.
+
+Need use warnings. Need maybe warnings warn category = UserWarning. Full type hint on `_notifier`. private method signature. Good.
+
+Potential nuance: Since `CallContext.duration_ms` could be bool (bool is int subclass). negative false? okay.
+
+Need maybe ensure "negative duration_ms" warning does not leak event. If duration_ms is `False`, not negative. Good.
+
+Need maybe "full context" meaning same object passed. Yes.
+
+Could there be a problem with enum member doc assignment after import: if another module imports BreakerState concurrently? no.
+
+Let's think deeper about invariant discipline and event order. Maybe the "guard" is not only state OPEN but the failure count threshold. In record_failure when not open, we increment then maybe set state. If subscriber to call_failed reentrant calls record_failure before state set? We set before. If not at threshold, state remains CLOSED; nested failure will increment further. This is intended: nested call is another failure. But could cause nested calls to open the breaker before outer notification returns. Example threshold 5, outer failure count goes from 4 to 5 and state OPEN before call_failed. nested record_failure sees OPEN ignored. Good. If outer failure count goes from 2 to 3 (not open). Subscriber to call_failed reentrantly calls record_failure: count from 3 to 4 (not open), emits call_failed, etc. This recursion could go to 5 and open nested. Then outer call_failed notification returns and no opened outer because transition_to_open false. Events: nested opened may fire before outer outer call_failed completes. State guard works. Exactly once per transition. Good.
+
+But could infinite recursion if subscriber calls record_failure for each failure and threshold high? Normal. No lock. Good.
+
+Potential nuance: "breaker_opened must fire exactly once per transition to OPEN. It must never fire again while the breaker is already open." Suppose record_failure increments to threshold (OPEN), emits call_failed. Subscriber calls record_success (success). record_success does not reset because state open, emits success. Then after call_failed, outer emits opened. Okay. Later reset(), then failure_count=0 state CLOSED. Another failure reaches threshold opens again. Event fires once per transition. Good.
+
+Now record_success and reset: If success while open emits call_succeeded but does not reset. If subscriber to success calls reset(), state CLOSED count 0. Outer success notification after nested reset? If success mutated before notification? For success not open no mutation. Wait if success open, no mutation. So nested reset before outer emits success? If success notification hasn't started? The code: record_success validate, maybe mutate if not open, then emit. If state open, no mutation. Then emit call_succeeded. If subscriber to call_succeeded calls reset, state changes. That's after notification begins. Fine. If success while closed: mutate count zero before emit. Subscriber calls reset, no change. If subscriber calls failure, may increment. Good.
+
+Need maybe `record_success` should reset failure count even if caller_state says HALF_OPEN? The spec: if breaker is not open. Breaker internal state, not caller_state. Good.
+
+Potential issue: `current_state` in `emit_call_succeeded`: Should it be `self._state` post-mutation. Yes. But if state is not open, and success mutates count to zero, state remains whatever. If internal state could be HALF_OPEN, current_state HALF_OPEN. Good. If state OPEN, current_state OPEN. Document.
+
+Potential nuance: If subscriber to call_succeeded reentrantly calls record_success before outer emits success? Not possible. Good.
+
+Now what about event `call_failed` and `threshold`: It passes `failure_count` internal. If nested callbacks can change failure_count before outer emits opened? For opened event no count arg. For call_failed event, failure_count at time of emission. For outer failure not at threshold, if subscriber reentrant increments count before outer event returns? The event argument is already captured and emitted before nested calls (call_failed emits, nested callback can occur during callback). The event's failure_count is the count at start of callback. Good. If nested increments count, outer event object doesn't change. Good.
+
+Should event call_failed emit before state open if threshold reached? If state set before, call_failed callback sees state OPEN. The failure_count passed is threshold. Good. If subscriber queries breaker? No public state getter. So event only.
+
+Could user expect internal state not observable. OK.
+
+Now maybe they expect use dataclass for `CallContext` immutable, but no validation. Fine.
+
+Could use `@dataclass(frozen=True, slots=True, init=True, repr=True)` default. Good. If need `kw_only=True`? no.
+
+Could include `from dataclasses import dataclass`. Good.
+
+Could include `__slots__` on BreakerState? Enum auto sets slots? Not needed. If setting member doc after, slots maybe? okay.
+
+Let's think about enum member docstrings assignment after class: If Enum has `__slots__` excluding `__doc__`, assignment fails. Let's be more certain by checking Python source? Dynamic class created by `EnumMeta` uses `class_dict = dict(namespace)`, then `mcls.__new__` maybe creates class with `__slots__ = ('_name_', '_value_', ...)`. Does it include `__doc__`? In Python 3.10 docs: Enum has `member_doc` feature? Hmm. I recall direct assignment to member `__doc__` might fail because member is an instance with slots. Let's search memory: You can do:
+```
+>>> class E(Enum):
+...   A = 1
+>>> E.A.__doc__ = 'foo'
+Traceback? Maybe AttributeError: 'E' object attribute '__doc__' is read-only? Wait Enum members have `__doc__` from class, maybe not writable. I remember using `enum.Enum.__doc__` not member. In Python 3.11, docs: "It is now possible to set the docstring of enum members, either by assigning `__doc__` directly, or by using `enum.member.Doc`." So yes writable in 3.11+. For 3.14 definitely. Good.
+
+But if enum value is `auto()` with no explicit type. Good.
+
+Could maybe assign docs in a loop:
+```
+for _name in ("CLOSED", "OPEN", "HALF_OPEN"):
+    getattr(BreakerState, _name).__doc__ = _DOCS[_name]
+```
+Fine. Or direct. Use direct to be clear.
+
+Potential issue: Docstring literals after class? We can assign triple strings. The docstring must be `__doc__` string. Good.
+
+Now events file: Should we annotate NOTIFIER? Could maybe not. But maybe user says "assume a module-level NOTIFIER object exists exposing:" They might expect to see in `breaker_events.py`:
+```
+NOTIFIER: BreakerNotifier
+```
+If we don't, then circuit_breaker expects external global. But maybe they want event contract file to mention. Could include a comment or annotation without assignment. But if `breaker_events.py` has `NOTIFIER: BreakerNotifier`, then in `circuit_breaker.py` could `from breaker_events import NOTIFIER`? If annotation-only, not define variable, import fails. But if application sets `breaker_events.NOTIFIER`, maybe. Hmm.
+
+Maybe better architecture: The NOTIFIER object is provided by a separate application module and imported in `breaker_events.py`? But "Do NOT implement". In `breaker_events.py`, maybe:
+```
+# A production system will provide NOTIFIER here, e.g.
+# NOTIFIER = some_notifier
+# It is intentionally not assigned in this contract module.
+NOTIFIER: BreakerNotifier
+```
+Then application sets `breaker_events.NOTIFIER`. But circuit_breaker needs sole point. It could import `NOTIFIER` from breaker_events? If annotation-only, no. But if application sets, global exists in breaker_events namespace before circuit_breaker imports? If circuit_breaker does `from breaker_events import NOTIFIER`, import will fail if variable not defined at time of import. Unless application sets `breaker_events.NOTIFIER` before importing circuit_breaker. That could work: import breaker_events (annotation-only not define), set `breaker_events.NOTIFIER = object`, then import circuit_breaker, but circuit_breaker's import statement executed after? If application code does:
+```
+import breaker_events
+breaker_events.NOTIFIER = notifier
+import circuit_breaker
+```
+If circuit_breaker has top-level `from breaker_events import NOTIFIER`, it imports after assignment, okay. But if circuit_breaker imported earlier, fails. Hard.
+
+Maybe simplest: circuit_breaker expects `circuit_breaker.NOTIFIER` set. The event file just contract. The user says NOTIFIER module-level object exists exposing methods. It doesn't specify in which module. We can document. Good.
+
+Could define a helper accessor in breaker_events:
+```
+def get_notifier() -> BreakerNotifier:
+    return NOTIFIER
+```
+No.
+
+Let's not overcomplicate. Provide code with `circuit_breaker.NOTIFIER` global. The event contract file can state: "The application is expected to expose a module-level `NOTIFIER` (commonly in the consuming application module or injected onto `circuit_breaker`)." But if user expected NOTIFIER in breaker_events, maybe okay? We can make code accept either by having circuit_breaker `_notifier()` first try global NOTIFIER in circuit_breaker, fallback to globals in breaker_events? But NOTIFIER sole point? That is referencing another module. Not allowed? It holds references to other systems? No, just lookup. But not requested. Could make robust:
+```
+def _notifier() -> BreakerNotifier:
+    return globals()["NOTIFIER"]
+```
+Only one. Good.
+
+Need ensure `NOTIFIER` is global attribute in circuit_breaker module, not imported. Good.
+
+Could also allow application to set `circuit_breaker.NOTIFIER` by using global variable. The code's annotation-only at module top does not create global variable, but assignment from outside creates. Good.
+
+Potential concern: Since `_notifier()` uses direct `NOTIFIER`, if no global but external has set `__getattr__` at module? Python 3.7 module __getattr__ can be defined in module. We don't define. But external could monkeypatch `circuit_breaker.NOTIFIER`. fine.
+
+Now maybe we need to ensure NOTIFIER not referenced before mutation in `record_failure`? We have `notifier = NOTIFIER` before mutation. If NOTIFIER lookup raises, no mutation. Good. But spec says mutate first. Does getting notifier before mutation violate? It doesn't notify. Good. If NOTIFIER object property side effect calls breaker? weird. If object's class uses attribute lookup triggers something, not notification. Could be okay. To strictly adhere, do mutation before any notifier operation: `self._failure_count += 1` etc, then `NOTIFIER.emit...`. Then if NOTIFIER missing, mutation happened. Under assumption. Which is better for spec? "When a method both mutates internal state and notifies subscribers, mutate first." The operation of resolving NOTIFIER isn't mutating but arguably part of notification. To be safe with spec, mutate before notifying, not necessarily before obtaining notifier. The guard must be post-mutation before first notification. The code with `notifier = NOTIFIER` before mutation doesn't notify before mutation. Good. It's not the first notification. So fine.
+
+Could if external NOTIFIER is a magic object with `__getattr__` that emits event? No, the emit itself is notification. The `notifier = NOTIFIER` gets object, no event. Good.
+
+Now let's consider adding `_validate_context` method: maybe simpler:
+```
+    def _is_valid_duration(self, duration_ms: int) -> bool:
+        return duration_ms >= 0
+```
+But then need docstring for private method? Not public. Could avoid.
+
+Should warnings include breaker name? Useful. Use `self._name`. Could message:
+```
+warnings.warn(f"Circuit breaker {self._name!r} received negative duration_ms; dropping event.", UserWarning, stacklevel=2)
+```
+Good. Full type hints.
+
+Could warnings.warn trigger if duration_ms is not int but negative? no.
+
+Now event contract docstring. Need describe guarantees. Write clear.
+
+Potential issue: The code file `breaker_events.py` defines `Protocol` methods with body `...`. In some static type checking, a Protocol method should not have implementation; `...` is ellipsis literal. Good. Docstrings. The callback signatures are `def emit...` not standalone callback. If they ask "callback signatures the notifier must support", maybe we should define standalone `Callable` aliases. Could include both; doesn't hurt? It adds public type aliases. Not features. Maybe beneficial. But user: "Do NOT add features that were not requested." Type aliases are features? Maybe not. Keep minimal: Protocol only. But docstrings mention callback signatures. Good.
+
+Could define `BreakerNotifier` not as Protocol but as class with method signatures and `...` body. This is implementation stub? Protocol better to show no implementation. But Protocol can't be instantiated. It's a contract. Good. Need import Protocol from typing. Standard library. Good.
+
+Maybe use `runtime_checkable`? Not requested. Could add decorator? no.
+
+Now potential issue: `CallContext` as frozen dataclass with slots but no custom init docstring. If we want generated init docstring, add:
+```
+CallContext.__init__.__doc__ = "Create a CallContext."
+```
+But `CallContext.__init__` is generated function. Is setting docstring okay? Yes. Do that.
+
+Could also set dataclass generated `__eq__`, `__hash__`, etc. Not public methods? Maybe not.
+
+CircuitBreaker methods: Constructor public. Add docstrings. Methods:
+```
+def __init__(self, name: str, failure_threshold: int = 5) -> None:
+```
+No validation. Maybe mention failure_threshold semantics: failure count reaches threshold opens. Good.
+
+Could maybe if `failure_threshold` is <=0, record_failure opens on first call. No doc mention.
+
+Could include `_notifier` method signature. It's private. Docstring. Fine.
+
+Need maybe use `warnings.warn` with category = UserWarning. Need full type hints. Good.
+
+Could add `__slots__` to CircuitBreaker. Good.
+
+Now let's write final code. Need include file names as headers. Could include code blocks. Ensure no tests.
+
+Potential hidden requirement: "The value is authored by the caller's policy layer, never decided inside the breaker's failure path." Maybe breaker should not inspect `caller_state`. We won't. But internal state not using caller_state. In record_success, current_state is breaker state, not caller_state. In event contract, call_succeeded current_state is breaker state, not caller_state. Could confuse with caller_state. Need docstring emphasize caller_state is passed unchanged in context; `current_state` is breaker's internal state after processing success, not `context.caller_state`. Good.
+
+Need maybe ensure caller_state not used in event as state argument. `emit_breaker_opened` passes context only. Good.
+
+Could `CallContext` have `caller_state` as BreakerState. The breaker not remapping. Good.
+
+Potential issue: If `record_success` emits call_succeeded with `current_state=self._state` but the spec says `NOTIFIER.emit_call_succeeded(breaker_name, context, current_state)`. It doesn't specify source. Good.
+
+Potential issue: When failure reaches threshold, the call_failed event includes failure_count = failure_threshold. Then breaker_opened event. The state already OPEN before call_failed. Document. Good.
+
+Potential issue: If `record_failure` at threshold calls call_failed, nested callbacks could call reset before opened event. We decided call_failed before opened. But nested reset can suppress? We are not checking state before opened. We'll emit opened anyway. Exactly once per transition. Good. If nested reset then outer opened emits, it is per transition. If another nested record_failure after reset before outer opened, state may be not open and failure count may change. Outer opened still emitted. Does that violate "never fire again while already open"? At the time of emitting opened, state might not be open. But "while the breaker is already open" probably means don't fire another open event for same open period. Emitting opened after nested reset is a new period? It's from old transition, not a current open state. Could be considered wrong. If nested reset happens during call_failed before opened, the transition to OPEN occurred but then reset to CLOSED before opened delivered. Should opened event fire? Probably yes, to preserve event order? Or no, because not open? The spec: breaker_opened must fire exactly once per transition to OPEN. The transition occurred. So yes. If nested reset occurs, the transition occurred but state is closed; event delivered after nested. Still exactly once. However if nested failure after reset reaches threshold, then nested opens and emits opened. Then outer opened also fires, causing two opened events for overlapping? They correspond to two transitions: nested transition and outer old transition. But outer opened occurs after nested opened, maybe weird. But the outer transition to OPEN happened before nested reset? Actually outer mutated to OPEN before call_failed. Nested reset after. Then nested failure could open again before outer opened event? Let's simulate:
+- count=4 threshold=5. outer failure: mutate count=5 state OPEN before call_failed. emits call_failed. callback nested:
+   - reset(): state CLOSED count 0 (emits nothing)
+   - record_failure(valid): not open, count=1 (<5) emits call_failed. no opened.
+   return.
+- outer emits opened (transition 1) after nested call_failed. So state currently CLOSED count=1. Opened event fires but not currently open. If nested calls were threshold 1? Suppose nested record_failure after reset reaches threshold and opens before outer opened. Then nested emits opened (transition 2) before outer opened (transition 1). This violates event order: outer opened fired after a newer opened. Also outer opened fires while already open due nested transition? At time outer opened emitted, state OPEN from nested transition. So "must never fire again while breaker already open" could be violated because outer opened fires while nested open period already started. To prevent, we need avoid nested mutations causing stale outer opened if state changed. But spec says exactly once per transition. If nested reset and reopens before outer opened, there are two transitions: nested and outer. But outer opened after nested open means a duplicate-like opened while already open. Hmm.
+
+Could avoid stale opened by emitting opened synchronously before call_failed. Then nested callbacks cannot alter before opened delivered. Let's explore:
+Outer threshold reached: mutate state OPEN before notification. Emit opened first. Then emit call_failed. Nested callbacks occur during opened or call_failed, after opened already delivered. Thus no stale opened. This seems stronger. The spec doesn't require call_failed before opened. To ensure "never fire again while already open", emit opened immediately when transition occurs, before call_failed. But record_failure "increments and emits call_failed" could be read as call_failed first, but not strict. The invariant discipline says any guard in post-mutation before first notification. If we emit opened first, the guard is set before opened. It is first notification. Then call_failed. A retry handler responding to failure sees state OPEN if opened callback reenters? Yes. But retry handler would not get call_failed until after opened. Is that bad? Maybe.
+
+Alternative: emit call_failed first but before opened, check whether state still OPEN and if so emit opened? But if nested reset, opened not emitted. Then transition to OPEN happened but event missing. If nested reset and reopen before outer opened, check state OPEN might emit opened but it's actually for nested transition already emitted? If we had a token/generation to ensure opened emitted only once per transition, could use generation counter. But no extra features? Could implement generation to avoid stale opened. But user didn't ask; invariant discipline maybe expects simpler mutate-first guard. Let's analyze what typical expected solution is.
+
+The instruction emphasizes: "When a method both mutates internal state and notifies subscribers, mutate first. Assume any subscriber may synchronously call back into the same method that notified it — a retry handler responding to a failure by issuing another call is normal. Any guard you write must already be in its post-mutation state before the first notification fires." This likely aims at avoiding duplicate opened events by setting state OPEN before emitting call_failed. They probably expect call_failed then opened. They may not consider nested reset before opened as a duplicate issue. The main guard: if not set state before call_failed, a reentrant record_failure could see non-open and increment again, maybe open multiple times. Setting state before any notification solves. They didn't ask to handle nested resets changing before opened. So call_failed first likely okay. But if a callback responds to failure by issuing another call, not reset. In that normal scenario: outer failure reaches threshold, state OPEN before call_failed. Reentrant record_failure sees OPEN and ignores. Then outer emits opened. Perfect. No nested reset. If callback issues record_failure during opened, also ignored. Good.
+
+What about call_failed before opened with normal reentrant failure: outer call_failed emitted, reentrant failure ignored, opened emitted. Good.
+
+If callback responds to failure by issuing success? state OPEN, success no reset. Good.
+
+So likely expected: increment, check threshold, set OPEN, emit call_failed, emit opened. The state guard is post-mutation before call_failed. Good.
+
+But if nested failure at not threshold can recursively cause opened before outer non-open call_failed. The state guard for that nested opened: it sets state OPEN before nested call_failed. Good. Outer no opened. Event order nested opened before outer call_failed completes. That's okay because different failure.
+
+Now maybe we should not emit opened after call_failed? Many implementations call failure callback, then if opened, opened event. That's normal. We'll document order. The invariant discipline satisfied.
+
+Could there be duplicate opened if callback to call_failed reenters before state set? We set state before call_failed. Good.
+
+Let's also consider if threshold=1. record_failure: increment=1, state OPEN before call_failed. call_failed emitted. callback reentrant failure: ignored. opened emitted. Good.
+
+Now record_success: mutate first before emit. If success callback reenters failure before state set? No state set needed; state unchanged. Good.
+
+Could reset emit nothing. If called from callback during opened, state changes but opened event already maybe pending. Normal.
+
+Ok.
+
+Need maybe not add generation. Avoid extra features.
+
+Potential issue: `failure_count` when success resets: If success emitted after reset, nested success reentrant? count zero. Good.
+
+Potential issue: `CallContext` immutable, but dataclass with `eq=True` could compare endpoint None etc. Not used.
+
+Need maybe no async. Good.
+
+Now final answer likely should include all four files in code blocks. Could include short intro. Since user asked to write files. Desired oververbosity 9: maybe explain design choices. But they asked code only? It says You are writing... Write four files. Could include code plus notes. Ensure not add tests. Could include comments. Need not explain too much, but maybe include event guarantees in docstrings. Good.
+
+Let's refine each file.
+
+breaker_state.py:
+```
+"""Enum for caller-authored breaker states."""
+
+from enum import Enum, auto
+
+
+class BreakerState(Enum):
+    """
+    Breaker state authored by the caller's policy layer.
+
+    This value is descriptive: it records the state that the caller believes
+    the breaker is in when the call is issued. The breaker failure path must
+    never decide, derive, or rewrite this value.
+    """
+
+    CLOSED = auto()
+    OPEN = auto()
+    HALF_OPEN = auto()
+
+
+BreakerState.CLOSED.__doc__ = """
+Caller-side view: no breaker restriction is believed active.
+"""
+
+BreakerState.OPEN.__doc__ = """
+Caller-side view: calls are expected to be rejected/blocked.
+"""
+
+BreakerState.HALF_OPEN.__doc__ = """
+Caller-side view: a trial call is allowed to discover whether recovery is
+possible.
+"""
+```
+Docstrings on enum members assigned. Are there any hidden members? No. auto values integer 1,2,3. Good.
+
+Could use `enum.auto()` imported. Good.
+
+call_context.py:
+```
+"""Immutable description of a single downstream call attempt."""
+
+from dataclasses import dataclass
+
+from breaker_state import BreakerState
+
+
+@dataclass(frozen=True, slots=True)
+class CallContext:
+    """
+    Immutable value object describing one downstream call attempt.
+
+    `caller_state` is caller-authored and load-bearing. It must be delivered to
+    every subscriber exactly as supplied; the breaker must not filter, remap, or
+    reinterpret it.
+    """
+
+    duration_ms: int
+    endpoint: str | None
+    caller_state: BreakerState
+
+
+CallContext.__init__.__doc__ = "Initialize a CallContext with duration_ms, endpoint, and caller_state."
+```
+Could need `from __future__ import annotations` for `str | None`? Python 3.14 no. Good.
+
+Should CallContext validate endpoint None? no.
+
+breaker_events.py:
+```
+"""Subscriber contract for circuit breaker notifications.
+
+This module defines the notification protocol only. It does not implement or
+define a notifier object.
+"""
+from typing import Protocol
+from breaker_state import BreakerState
+from call_context import CallContext
+
+class BreakerNotifier(Protocol):
+    """..."""
+
+    def emit_call_failed(self, breaker_name: str, context: CallContext, failure_count: int, threshold: int) -> None:
+        """...
+        """
+        ...
+...
+```
+Need docstrings for each method. Detailed guarantees:
+Class doc: The protocol describes methods invoked synchronously by CircuitBreaker. No notifier object is provided here. The application must supply a module-level NOTIFIER object implementing. Event order guarantees etc.
+Method doc:
+```
+    def emit_call_failed(self, breaker_name: str, context: CallContext, failure_count: int, threshold: int) -> None:
+        """Called for every accepted failure after failure_count was incremented.
+        Guarantees:
+        - Fires once per accepted record_failure call, including the failure that opens.
+        - context is the same CallContext passed by caller and unchanged.
+        - failure_count is breaker's failure count after increment.
+        - threshold is configured breaker threshold.
+        - When a failure reaches threshold, breaker state has already transitioned to OPEN before this callback starts; breaker_opened follows in the same outer record_failure call.
+        - Callbacks are synchronous and may reenter record_failure. The breaker uses post-mutation guard state before delivering this event.
+        """
+        ...
+```
+Potential issue: If callback raises, guarantee incomplete? Maybe not.
+
+`emit_call_succeeded`: Called for every accepted success after mutation to reset count if not open. Fires once per accepted success even when open. current_state is breaker's internal state after mutation. The context unchanged. Callbacks may reenter. Good.
+
+`emit_breaker_opened`: Called exactly once per transition into OPEN, never while already open. Fires after state transition and after call_failed for same failure? If call_failed first, then yes. Document. context is failure context. Callbacks may reenter and see open state. Good.
+
+Could mention exceptions propagate. Add class doc: "If a callback raises, no recovery is attempted; internal mutations already performed remain, and notifications after the exception may not be delivered." Is that a guarantee? It is a consequence. Could be useful. But maybe not requested. Could include. Does it add features? no. Keep concise.
+
+Need maybe callback signatures as separate protocols? Hmm. Could include at bottom:
+```
+CallFailedSignature = Callable[[str, CallContext, int, int], None]
+```
+But not necessary. However phrase "Define the callback signatures" maybe the methods are signatures. Good.
+
+Maybe use `Protocol` with `def __call__`? Since callback signatures could be callable listeners. But spec says NOTIFIER exposes methods. Protocol methods satisfy.
+
+Now circuit_breaker.py:
+```
+"""Single-counter circuit breaker that notifies through global NOTIFIER."""
+
+import warnings
+
+from breaker_state import BreakerState
+from call_context import CallContext
+from breaker_events import BreakerNotifier
+
+NOTIFIER: BreakerNotifier
+```
+But as noted bare annotation with no assignment. If `BreakerNotifier` imported. Good. But if module loaded and no global, the annotation is in annotations. Good.
+
+Could direct reference `NOTIFIER` before assignment in `_notifier` not problem. Maybe include comment:
+```
+# `NOTIFIER` is intentionally not initialized. The application is responsible
+# for providing ``circuit_breaker.NOTIFIER`` before recording calls.
+```
+Good.
+
+But if Python evaluates annotation `NOTIFIER: BreakerNotifier`, it needs `BreakerNotifier` defined. It is imported. Good. Without `from __future__`, it evaluates expression but doesn't assign variable. Fine.
+
+Potential issue: The annotation `NOTIFIER: BreakerNotifier` at module scope creates a module-level annotation. If no global variable, `globals().get("NOTIFIER")` returns None? Actually bare annotation does not set variable. `NOTIFIER` not in globals. But `__annotations__` contains 'NOTIFIER'. Good.
+
+Need `_notifier` function:
+```
+def _notifier() -> BreakerNotifier:
+    """Return the globally provided notifier object."""
+    return NOTIFIER
+```
+Static maybe says NOTIFIER undefined? It is annotation. Fine. Could avoid function and use local in methods. But function private method? It's module function. It is a signature. Full hints. Good.
+
+Potential issue: `_notifier` uses global NOTIFIER, but if not assigned, NameError. Good.
+
+Could maybe use `globals()["NOTIFIER"]` in `_notifier` to avoid linter undefined. But spec direct global? Let's use direct global. The annotation makes it known. Maybe lint F821? not issue. If we want clean, use:
+```
+def _notifier() -> BreakerNotifier:
+    return globals()["NOTIFIER"]
+```
+Then no direct global. Is NOTIFIER sole point? It's global. The function uses global mapping. The application sets circuit_breaker.NOTIFIER. Good. But then annotation `NOTIFIER: BreakerNotifier` maybe not needed. It is a marker. Good. Use direct? I'd prefer direct for readability and explicit sole contact. Add comment. Type checker likely accepts annotation-only? If not, can ignore.
+
+Could use:
+```
+_NOTIFIER: BreakerNotifier | None = None
+```
+No, implements placeholder. No.
+
+Let's consider if direct global lookup in `_notifier` will raise NameError before the method mutates. Good. If no NOTIFIER, record_failure resolves before mutation (if we do). Good.
+
+Let's decide event order call_failed then opened. Document. Code:
+```
+class CircuitBreaker:
+    """
+    A synchronous, failure-count circuit breaker.
+
+    The breaker has no references to any external system. The global NOTIFIER
+    object is its only contact.
+    """
+    __slots__ = ("_name", "_failure_threshold", "_failure_count", "_state")
+
+    def __init__(self, name: str, failure_threshold: int = 5) -> None:
+        """..."""
+        self._name = name
+        self._failure_threshold = failure_threshold
+        self._failure_count = 0
+        self._state = BreakerState.CLOSED
+
+    def record_failure(self, context: CallContext) -> None:
+        """..."""
+        if context.duration_ms < 0:
+            warnings.warn(...)
+            return
+
+        if self._state is BreakerState.OPEN:
+            return
+
+        notifier = _notifier()
+
+        self._failure_count += 1
+        opening = self._failure_count >= self._failure_threshold
+        if opening:
+            self._state = BreakerState.OPEN
+
+        notifier.emit_call_failed(self._name, context, self._failure_count, self._failure_threshold)
+        if opening:
+            notifier.emit_breaker_opened(self._name, context)
+```
+Potential issue: If NOTIFIER not set and state OPEN invalid? We check state before notifier. If already open, no NameError. If not open, lookup before mutation. This avoids mutation if no notifier. Good.
+
+But "record_failure increments an internal failure count and emits call_failed". If notifier missing, no increment. But assumption. Good.
+
+Could `notifier = _notifier()` before checking state open? We choose after invalid/open. For success:
+```
+    def record_success(self, context: CallContext) -> None:
+        if context.duration_ms < 0: warn return
+        notifier = _notifier()
+        if self._state is not BreakerState.OPEN:
+            self._failure_count = 0
+        notifier.emit_call_succeeded(self._name, context, self._state)
+```
+Should state mutation happen before notifier lookup? To strictly mutate first, do lookup after mutation. But if missing, mutation already happened. Since assumption exists, okay. But to avoid mutation when no notifier, lookup before mutation. The guard for success is state (not changed), no reentrant issue. But "mutate first" maybe we should mutate before lookup? If lookup triggers something? Hmm.
+
+Could do:
+```
+        if self._state is not BreakerState.OPEN:
+            self._failure_count = 0
+        notifier = _notifier()
+        notifier.emit_call_succeeded(...)
+```
+Then mutate first, notify second. If NOTIFIER missing, mutation remains. Under assumption okay. This follows spec more literally. For failure, if lookup before mutation, not literal. Could reorder to mutate before lookup:
+```
+        if self._state is BreakerState.OPEN: return
+        self._failure_count += 1
+        opening = ...
+        if opening: self._state = BreakerState.OPEN
+        notifier = _notifier()
+        notifier.emit_call_failed(...)
+```
+But if _notifier missing, state mutated. Maybe okay. To adhere to invariant, mutate before any notifier interaction? `_notifier()` not a notification but still. I'd prefer mutate before `_notifier()` to match "mutate first". If NOTIFIER missing is out of scope. But if missing, bad side effects. The spec assumes exists. Let's follow spec strictly. However if subscriber can call back, not relevant. If NOTIFIER lookup has no side effect, not matter.
+
+But if `_notifier` direct global and not set, NameError after mutation. Could be considered failing to drop gracefully for missing notifier. But no requirement. If want both mutate-first and not mutate when missing, impossible unless check notifier existence before mutation (not notification). We can do existence check: `notifier = _notifier()` before mutation. Is that a notification? No. The requirement "When a method both mutates internal state and notifies subscribers, mutate first" means notification must occur after mutations. Getting a reference is not notification. So doing `notifier = _notifier()` before mutation is still satisfying: all mutations happen before first notification. It doesn't require lookup after mutation. Good. Use that for safer.
+
+Now if `_notifier()` returns NOTIFIER object whose lookup could trigger subscriber? Module global attribute lookup no. Good.
+
+Could maybe if NOTIFIER object's class has property? We get object, not property. fine.
+
+Now invalid warning: Should warnings.warn before resolver. Good.
+
+Should `warnings.warn` category be `RuntimeWarning`? Use `UserWarning`. Good.
+
+Could maybe message include invalid duration value:
+```
+warnings.warn(
+    "CallContext.duration_ms must be non-negative; event dropped. "
+    f"received duration_ms={context.duration_ms!r} for breaker {self._name!r}.",
+    UserWarning,
+    stacklevel=2,
+)
+```
+If duration_ms negative. Good.
+
+Should we use f-string? no issue.
+
+Could warnings.warn raise if -W error. Then exception. Spec says not exception. If warnings filter turns to error, it's caller's choice. Can't prevent. Could use warnings.warn with `stacklevel=2`. Good.
+
+Now maybe add a public method to query state? Not requested. Don't.
+
+Need maybe no properties. Good.
+
+Now event contract: Should we mention `CallContext` is not copied. Good.
+
+Potential issue with Protocol methods: In Protocol, defining `...` as body is okay but if docstring after `...`? We need docstring before ellipsis:
+```
+    def emit_call_failed(...)-> None:
+        """Doc.
+        """
+        ...
+```
+Good.
+
+Could there be a conflict with Protocol methods requiring no implementations? Ellipsis is not implementation. Good.
+
+Potential issue: The Protocol has methods but is not runtime_checkable. If application wants isinstance, not. Not requested. Could omit.
+
+Now final answer: Should we include `# file: breaker_state.py` etc. Good. Could use `python` code blocks. Provide maybe no extra text besides code. But oververbosity 9 maybe include a short note after: "These modules assume NOTIFIER is set". But user asked files. Could include just files. The final answer should not include tests. Good.
+
+Let's think of edge cases to ensure code correctness.
+
+- Enum exactly three members. We assign docs after. No aliases. Good.
+- CallContext exactly three fields. Dataclass has fields; no extra fields. It has methods `__init__`, etc. Exactly fields. Good.
+- breaker_events: no notifier. Protocol only. Good.
+- circuit_breaker: constructor takes name and threshold. Public methods. Good.
+- record_failure already open ignored entirely. We check before resolver/mutation. Good.
+- record_success emits and if not open resets count. We emit after mutation. Good.
+- reset returns to CLOSED with zero count emits nothing. We set. Good.
+- invalid negative duration dropped warning. For both methods. Good.
+
+Should record_failure invalid and state open warn? We validate before state, yes. record_success invalid warn. Good.
+
+Should invalid input on reset? no.
+
+Could invalid input negative duration_ms but type not int? No runtime validation. If duration_ms is None, `<` raises TypeError not warning. Type hints say int. Could add try/except to ensure warning not exception? Spec says invalid input negative duration_ms, not non-int. Avoid extra.
+
+Potential issue: `endpoint` may be `None`. Good.
+
+Now maybe user expects Python 3.14 standard library only; `dataclasses`, `enum`, `warnings`, `typing`. Good.
+
+Potential issue: If we use `str | None`, Python 3.10+ standard. Good.
+
+Potential issue: `BreakerNotifier` Protocol uses `BreakerState` and `CallContext`. Good.
+
+Could include `from typing import Protocol` but Protocol runtime overhead. Good.
+
+Now maybe we should avoid module-level annotation NOTIFIER in circuit_breaker if not assignment because if code runs under `from __future__ import annotations`, no. Without future, annotation eval but no assignment. It's okay. But some environments might disallow annotated declaration in global? It is legal. Example:
+```
+x: int
+print(globals().get('x')) # None? Actually x not in globals. But no error.
+```
+Yes. Could include.
+
+Need ensure `_notifier()` uses global NOTIFIER. If the module has annotation only, not defined. If external sets `NOTIFIER`, function sees it. Good. If code imported and external sets before calls. Good.
+
+Could static analyzers treat `_notifier()` as referencing undefined NOTIFIER even with annotation-only? Some may. Could make `_notifier` return `globals()["NOTIFIER"]` to be explicit. This also doesn't need annotation. But spec: NOTIFIER is sole point of contact. I can use direct with comment. I think acceptable.
+
+Maybe to avoid static issue and keep sole point, do:
+```
+def _notifier() -> BreakerNotifier:
+    """Return the application-provided module-level NOTIFIER."""
+    return globals()["NOTIFIER"]
+```
+No direct global reference. But then annotation `NOTIFIER: BreakerNotifier` is unused except marker. It is fine. The module's sole point is still NOTIFIER global in circuit_breaker. If application sets `circuit_breaker.NOTIFIER`. Good. Which is cleaner? It avoids `NameError`? It raises KeyError. Could catch and raise RuntimeError. But if missing, exception not exception? Not spec. Could let KeyError. But NameError maybe clearer? Direct global. Hmm.
+
+Maybe use direct global for "module-level object" semantics. Keep annotation. Good.
+
+Now what about if `NOTIFIER` object is set after `_notifier` call, and nested callback changes NOTIFIER? Each method call captures notifier local. If during notification, application reassigns `circuit_breaker.NOTIFIER`, the outer method still uses old object for remaining events. Is that okay? The contact is at time of method. Could alternatively call global lookup for each event to reflect current. Not specified. Capturing ensures consistency within a call. Good.
+
+But invariant says subscriber may synchronously call back into same method. If during call_failed, application sets NOTIFIER to new object, nested calls use new object? Our nested record_failure resolves via _notifier at start, sees new global if set before nested call. Outer subsequent opened uses old captured `notifier` if we captured before mutation. This could be weird. If we instead look up global for each event after mutation, outer opened uses new. Which is desired? NOTIFIER sole contact likely current global. But consistency not required. If using local `notifier`, it could hold reference to old notifier, but breaker does not hold references long-term. It's okay. If application changes notifier mid-call, undefined. We can avoid long-term reference. The spec "holds NO references to any other system" could mean not store notifier as attribute. It holds local in method. That's transient. Good. But to be pure, maybe not capture local before mutation? Still local variable exists. Any use holds reference temporarily. That's normal. Could avoid by direct calls:
+```
+NOTIFIER.emit_call_failed(...)
+...
+NOTIFIER.emit_breaker_opened(...)
+```
+Each event resolves current global at emit. It also has short temporary reference. If we want no long-term references, local is okay. But if local is held while callback runs, it is a reference during callback. Not "holds" maybe okay. Direct calls also temporary.
+
+Should we not store `notifier` variable because "The breaker holds NO references to any other system"? A local variable is a reference during method execution. If interpreted strictly, direct global call may also temporarily resolve object. But any call requires object. I think local okay. But maybe to minimize reference, call global methods directly without storing. However if we need ensure mutate before notification, direct. Use direct? Then if NOTIFIER missing, NameError after mutation (unless we validate open?). Could be okay assumption. But if we want capture to ensure consistency, maybe local. I think local is acceptable.
+
+Could use `_notifier()` at each emit to not hold across callback? But then if nested changes global, outer uses new for opened. Hmm. Not specified. Capture is fine.
+
+Maybe to strictly satisfy "NOTIFIER is its sole point of contact" and "holds NO references", local notifier variable is not stored in instance. Good.
+
+Let's consider static checkers with local direct global: If NOTIFIER not defined, code has undefined. Could use `_notifier` with globals to avoid. But then still object reference local. Fine.
+
+I'll use `_notifier()` helper and capture. Add comment that no instance reference retained.
+
+Now event order: We set state before call_failed. Then emit call_failed. If a callback reenters same method, state post-mutation. But what if callback to call_failed changes `self._failure_count` via nested failure (not open scenario). Outer opened condition `opening` local remains false. Good. If nested opens and emits opened, outer no opened. Good.
+If opening true, local true. Outer emits opened even if nested reset. Normal reentrant failure ignored; no nested state change except success maybe no reset. So no issue. If nested reset, event stale as discussed. Could prevent with checking state still OPEN before emitting opened. If we do:
+```
+if opening and self._state is BreakerState.OPEN:
+    notifier.emit_breaker_opened(...)
+```
+Then nested reset suppresses opened, but nested failure cannot reopen without emitting opened already? If nested failure after reset and threshold opens, it will emit opened. Then outer opening true but state OPEN; would emit another opened while already open (nested open period) -> violation. So need generation to fix. But normal not. Simpler as before.
+Could emit opened before call_failed to avoid stale reset. But spec suggests after. Which is more likely expected? Let's review invariant wording: "When a method both mutates internal state and notifies subscribers, mutate first. Assume any subscriber may synchronously call back into the same method that notified it — a retry handler responding to a failure by issuing another call is normal. Any guard you write must already be in its post-mutation state before the first notification fires."
+"same method that notified it": If failure callback triggers record_failure, guard should be set before failure notification. If failure notification is call_failed, state should be OPEN before call_failed. Thus call_failed is first notification. Then opened is a subsequent notification. This implies call_failed before opened. Yes. They explicitly mention guard before first notification. If we emitted opened before call_failed, first notification is opened, guard is open. The retry handler responding to failure by issuing another call would not be in first notification? It would be after opened. That's also okay but less aligned. The phrase "first notification" likely refers to call_failed because failure is what triggers callback. So call_failed first. Good.
+
+Now maybe record_success: first notification call_succeeded. Mutate before. Good.
+
+Now could need to ensure `record_failure` already open ignored before any notifications. Yes.
+
+Now what about `record_success` when already open: Should mutate first? no mutation. It emits. If subscriber reenters record_failure, guard open already set before first notification? State was open from prior failure, post-mutation. Good.
+
+Now maybe need to reset failure count before emitting success, not after. We do. Good.
+
+Could record_success when not open but failure_count >0: resets to 0. If subscriber reenters record_failure, count starts at 0. Good.
+
+Now `reset`: If called during a notification, it changes state and count but emits nothing. Outer methods may still emit subsequent events based on local flags. That's inherent. Could document reset not guarded. Good.
+
+Should the breaker's `reset` be post-mutation before no notification. trivial.
+
+Potential issue: If record_failure at threshold emits call_failed, subscriber calls reset, then outer emits opened. Could violate "while breaker already open"? It's not open at emit. But event indicates a transition. Maybe acceptable. Could add in event contract: "Callbacks may mutate breaker state synchronously before subsequent notifications of the same outer method complete. Guarantees describe the transition that occurred when the event was queued, not the state observed at the instant of callback delivery." But that seems complex and not requested. Maybe omit. Or use opened before call_failed to avoid. Hmm.
+
+What would a production service want? If a subscriber gets call_failed for failure #5, it might see breaker open already. Then it might want an opened event. If it resets before opened event, perhaps it shouldn't get opened after reset. The guarantee "breaker_opened must fire exactly once per transition to OPEN" could imply if reset happens before opened, transition still happened, but maybe not deliver after reset? Event delivery order matters. To make event order clean: opened before call_failed. Then no callback can affect opened before it fires. But then call_failed callback sees state open after opened. The first notification is opened, not failure. The invariant says guard in post-mutation before first notification (opened). That holds. If retry handler responding to failure by issuing another call wants to happen in opened callback? It can issue failure in opened callback, sees open ignored. But it may prefer to handle failure first. Which is more natural? Usually failure event, then state change event. Hmm.
+
+Could emit call_failed first but also emit opened synchronously without allowing callbacks in between? Not possible because callback is synchronous in call_failed. Could pass events with ordering but no callbacks between. The subscriber contract could require that callbacks MUST NOT reenter breaker except allowed? The invariant says they may. So order tradeoff.
+
+Maybe implement with a state transition token to deliver opened exactly once per transition even with nested reset. But no extra fields? Could add `_open_event_generation` and increment when transition to OPEN. On nested transitions, generation changes. Then outer emits opened only if generation unchanged. This ensures opened corresponds to current transition. But that adds feature? It's just correct implementation of guarantee with callbacks. Could do without exposing. Let's think.
+
+We can add `_open_event_pending_token`? When transition to OPEN occurs, store token. Emit call_failed. After call_failed, if token still matches (no state changes), emit opened. If nested reset or another failure/reset occurred, do not emit stale opened. But if nested reset suppresses outer opened, transition event lost. Is that okay? Maybe if state no longer open, no need to announce old open. But spec: breaker_opened must fire exactly once per transition to OPEN. If it doesn't fire, violates. Could instead if nested failure opened a new transition, nested opened fired, outer old transition suppressed. Then total opened events: nested fired once, outer suppressed. There were two transitions but one event? Violates. Unless consider outer transition canceled by reset before event delivery? Ambiguous.
+
+If emit opened before call_failed, no need token. Guarantee easy: event before nested callbacks. The first notification after mutation is opened, so guard before first. If spec expects call_failed first? Could argue record_failure emits call_failed (could be after opened) still emits. The ordering not mandated. I lean opened before call_failed may be more robust reentrant-wise. But the invariant example: "a retry handler responding to a failure by issuing another call is normal." If failure notification is call_failed, it can retry after call_failed. If opened before call_failed, retry can also happen after opened but before call_failed? It might see opened, but not failure context? It can still retry in opened callback? The opened callback doesn't mention failure details except context. But call_failed not emitted yet; if callback raises in opened, call_failed never emitted. Bad. If call_failed first, failure is always delivered even if opened callback raises? If call_failed raises, opened won't fire. Hmm.
+
+Maybe expected by typical libraries: failure event, then state change event. The "guard before first notification" likely call_failed. So call_failed first.
+
+Nested reset stale opened is a rare pathological scenario. The spec doesn't forbid callbacks calling reset. It says "any subscriber may synchronously call back into the same method that notified it" same method, not reset. They mention retry handler responding to failure by issuing another call. That's record_failure. They don't mention reset. So nested reset is less likely considered. So call_failed first is okay.
+
+Now maybe should ensure record_failure at threshold emits call_failed even if state already open? No ignored. Good.
+
+Let's consider if state internal can be OPEN and reset called by success callback? record_success emits call_succeeded, not failure. If success callback calls reset, fine. record_failure at threshold call_failed callback could call reset too. But not normal. We'll not handle.
+
+Now maybe use `>= threshold` not `==`. Good.
+
+Now code for warnings: Could put a helper method `_warn_invalid_duration`. Public? private. Full type hints. It would warn. Could reduce duplication. Use private method:
+```
+    def _warn_invalid_duration(self, context: CallContext) -> None:
+        warnings.warn(...)
+```
+Private method docstring not required but can. Could just inline to avoid extra method. But duplication small. Maybe add helper for clarity. It is a method but private. The requirement "Docstrings on every public..." private okay. But if we add method, more code. Could inline in both methods. Good.
+
+Could create `_notifier` helper outside class. Fine.
+
+Now final answer: Need ensure all files independent imports. In `breaker_events.py`, Protocol methods have `...` body but no return. Good.
+
+Maybe include `Protocol` from `typing`. Since Python 3.14, `typing.Protocol` okay. Good.
+
+Could use `Protocol` only for contract. The Protocol methods need type hints on `self`? `self` not type hint but standard. Could write `self: "BreakerNotifier"`. Full type hints on every signature might require return and params. `self` conventionally omitted. Could include `self`? Not necessary. But to be safe? Full type hints typically don't require self. Good.
+
+Could use `BreakerNotifier` Protocol with methods named `emit_call_failed`, etc. Good.
+
+Potential issue: Since Protocol methods use `CallContext`, and `CallContext` is frozen dataclass, not Protocol. Good.
+
+Now final code.
+
+Let's write with clear docstrings.
+
+breaker_events class doc guarantee maybe:
+```
+"""
+Notification contract. No notifier object is provided by this module.
+
+The application is expected to create a module-level object named `NOTIFIER`
+whose structure satisfies this protocol. `CircuitBreaker` calls these methods
+directly; subscribers are called synchronously.
+
+If a callback raises an exception, the breaker does not catch it. The internal
+state mutations made before the first callback remain in effect. Events after
+the exception may not be delivered.
+"""
+```
+Could "subscribers are called synchronously" but the notifier may dispatch. The contract is for notifier; if notifier async? No async. Good.
+
+Method `emit_breaker_opened` guarantee: "Fires after the breaker state has been changed to OPEN. It is not called for calls recorded while the breaker was already OPEN." Good.
+
+Now in circuit_breaker docstrings mention global NOTIFIER.
+
+Potential issue: In `record_failure`, local `notifier = _notifier()` before mutating, but if NOTIFIER missing, no mutation. The docstring could say all accepted failures increment count before notification. If notifier missing, it's not accepted? But not relevant.
+
+Maybe if `notifier = _notifier()` raises NameError, record_failure raises, not exception? The spec didn't say. Fine.
+
+Could warnings.warn itself be affected by global NOTIFIER missing? no.
+
+Now let's think about if `failure_threshold` is 0. record_failure: not open; self._failure_count += 1; opening true; state OPEN; event count 1 threshold 0. Success not open resets. Good. If already OPEN ignored. Good. If failure_threshold negative, opening true too. Fine.
+
+Now if `name` empty, okay.
+
+Now if `CallContext.duration_ms` negative: warn. But if negative and already open: warns even though ignored. Fine.
+
+Could warnings.warn use `source`? no.
+
+Now final response: Maybe include all four files as separate code blocks with filename comments. Ensure no extra tests. Could mention "Place all four files in the same package/module directory." Good. Could include note on NOTIFIER injection. Since desired oververbosity 9, maybe after code explain how to configure NOTIFIER. But user requested write files; extra notes okay. Ensure no code with tests.
+
+Let's consider if code has syntax issues.
+
+breaker_state.py:
+```
+from enum import Enum, auto
+
+class BreakerState(Enum):
+    """..."""
+    CLOSED = auto()
+    OPEN = auto()
+    HALF_OPEN = auto()
+
+BreakerState.CLOSED.__doc__ = """
+..."""
+...
+```
+This is valid. The docstring strings are not attached as literal docstrings but `__doc__`. Good.
+
+call_context.py:
+```
+from dataclasses import dataclass
+from breaker_state import BreakerState
+
+@dataclass(frozen=True, slots=True)
+class CallContext:
+    """..."""
+    duration_ms: int
+    endpoint: str | None
+    caller_state: BreakerState
+
+CallContext.__init__.__doc__ = "..."
+```
+Will `CallContext.__init__` exist? Yes. Setting `__doc__` on function is allowed. Good.
+
+breaker_events.py:
+Need import Protocol. In methods, use ellipsis after docstring. Valid. Protocol methods with docstrings. Good.
+
+circuit_breaker.py:
+```
+import warnings
+
+from breaker_state import BreakerState
+from call_context import CallContext
+from breaker_events import BreakerNotifier
+
+NOTIFIER: BreakerNotifier
+
+def _notifier() -> BreakerNotifier:
+    """..."""
+    return NOTIFIER
+
+class CircuitBreaker:
+    """..."""
+    __slots__ = ("_name", "_failure_threshold", "_failure_count", "_state")
+...
+```
+At module load, annotation `NOTIFIER: BreakerNotifier` is evaluated? With no `from __future__`, yes it stores `__annotations__` and requires BreakerNotifier defined. It doesn't require assignment. Good. The function `_notifier` returns NOTIFIER; at runtime if not defined NameError. Good. But linters may flag. Could add comment. Fine.
+
+Could there be a problem because `NOTIFIER` annotation at module scope but not assignment means `BreakerNotifier` is not imported at runtime if using lazy imports? We import runtime. Good.
+
+Maybe static checkers complain "Name 'NOTIFIER' is not defined" in `_notifier`. Could avoid by using `globals()["NOTIFIER"]`. Let's weigh. The user is likely not running static checks. The code should be robust. If I use `return globals()["NOTIFIER"]`, no undefined global in bytecode. The annotation marker still documents. It also means if external sets `circuit_breaker.NOTIFIER`, global dict has it. Good. If not, KeyError. This is less likely to fail linters. But does it violate "NOTIFIER is its sole point of contact"? The code contacts the global name via string. The module-level variable is same. I think okay. Maybe direct global is clearer. Use direct with comment. Could also add `# type: ignore[name-defined]`? Not necessary. Since final answer code maybe judged by humans. Direct global clearly shows NOTIFIER. Good.
+
+Potential issue: If module has annotation-only `NOTIFIER`, then `globals()` may not contain key until assignment. Direct global lookup `NOTIFIER` also uses globals. Good.
+
+Could use `if TYPE_CHECKING: NOTIFIER: BreakerNotifier = ...` no. Fine.
+
+Now code record_failure:
+```
+    def record_failure(self, context: CallContext) -> None:
+        if context.duration_ms < 0:
+            warnings.warn(..., UserWarning, stacklevel=2)
+            return
+
+        if self._state is BreakerState.OPEN:
+            return
+
+        notifier = _notifier()
+
+        self._failure_count += 1
+        transition_to_open = self._failure_count >= self._failure_threshold
+        if transition_to_open:
+            self._state = BreakerState.OPEN
+
+        notifier.emit_call_failed(
+            self._name,
+            context,
+            self._failure_count,
+            self._failure_threshold,
+        )
+
+        if transition_to_open:
+            notifier.emit_breaker_opened(self._name, context)
+```
+Docstring mention order. Good.
+
+Potential issue: If context is invalid negative, `warnings.warn` may itself be filtered to exception. If exception, record_failure raises. Spec not exception but filter. Can't avoid. Could use `warnings.warn(..., category=UserWarning, stacklevel=2)`; no.
+
+Could include a custom category? no.
+
+record_success:
+```
+        if context.duration_ms < 0: warn; return
+        notifier = _notifier()
+        if self._state is not BreakerState.OPEN:
+            self._failure_count = 0
+        notifier.emit_call_succeeded(self._name, context, self._state)
+```
+Should `notifier = _notifier()` after state mutation? If `_notifier` raises, no mutation. Good. If `_notifier` not notification. Fine. But if `_notifier` returns object and then nested? not. Good.
+
+reset:
+```
+        self._failure_count = 0
+        self._state = BreakerState.CLOSED
+```
+Docstring. Good.
+
+Could order count before state? irrelevant. Maybe state first? Mutate first no notify. Use state and count. Good.
+
+Need docstring for `__init__`: mention initial CLOSED count zero.
+
+Potential issue: If `CallContext` dataclass with slots has no `__dict__`, passing to notifier okay. Notifier receives same object. It cannot modify fields. Good.
+
+Now maybe user expects "immutable type" but not necessarily dataclass. Good.
+
+Could maybe use `frozen=True` but dataclass is not necessarily hashable if mutable fields? Fields immutable int/str/None/enum; hashable. Good.
+
+Potential issue: In `call_context.py`, `endpoint: str | None` without default, so `endpoint` required but can be None. Good.
+
+Now perhaps include `__all__`? no.
+
+Now final answer structure:
+```
+### breaker_state.py
+...code...
+
+### call_context.py
+...code...
+
+### breaker_events.py
+...code...
+
+### circuit_breaker.py
+...code...
+```
+Add note after code:
+"Assume `circuit_breaker.NOTIFIER` is set to a `BreakerNotifier` before using. E.g. `import circuit_breaker; circuit_breaker.NOTIFIER = my_notifier`. If you want `breaker_events.NOTIFIER` instead, modify one line. The contract module intentionally does not define notifier." Maybe include. But if user asked exactly modules, okay. Could include concise note. Since oververbosity high, include note. But don't overdo.
+
+Let's double-check final code no third-party.
+
+Potential issue: In breaker_events Protocol docstring: `current_state` is the state *after* success. But if record_success when not open resets count but state unchanged. If state is not open but caller_state HALF_OPEN? internal state not. If success while HALF_OPEN (not possible) resets count and state remains HALF_OPEN. Event current_state HALF_OPEN. Good.
+
+Potential issue: record_failure emits call_failed with failure_count and threshold. If the threshold is exceeded by nested calls before callback? The event argument fixed. Good.
+
+Potential issue: If threshold reached and call_failed callback raises, opened not emitted. The guarantee doc says exceptions propagate and remaining events may not be delivered. Good.
+
+Potential issue: If call_succeeded callback raises, no events after. Good.
+
+Potential issue: The Protocol method signatures use `threshold: int`. Good.
+
+Now, could there be a requirement "This value is authored by the caller's policy layer, never decided inside the breaker's failure path." Maybe we should make BreakerState an enum but not include internal state? Good.
+
+Could the `CircuitBreaker` constructor have `failure_threshold: int = 5`. Good.
+
+Potential issue: Public methods signatures: `reset(self) -> None`. Good.
+
+Could include type hints for warnings warn category? no.
+
+Now perhaps need no "module-level NOTIFIER object" in circuit_breaker if not implemented. The code's annotation declares but not assign. It's okay. The application can set. Maybe if code is imported and NOTIFIER not set, `NOTIFIER` not in globals but annotation exists. If user tries `from circuit_breaker import NOTIFIER`, ImportError. Could avoid annotation-only to prevent false expectation. Hmm. Maybe remove annotation-only and just comment. Then `from circuit_breaker import NOTIFIER` would fail anyway. With annotation-only, import also fails because variable not defined. Good.
+
+Could define `_NOTIFIER_GLOBAL = "NOTIFIER"` no. Fine.
+
+Maybe direct global with annotation-only is not ideal because code may be seen as referencing undefined. Could use `globals()` to avoid static error but not direct. Let's decide final. Use direct with annotation? The instruction says "assume a module-level NOTIFIER object exists exposing". If we don't define it but assume exists, direct global is natural. Good.
+
+Potential issue: In Python, a bare module annotation `NOTIFIER: BreakerNotifier` is not a statement that ensures `NOTIFIER` global exists; but if not defined, direct reference raises NameError. Good. If the application sets before use, okay. Good.
+
+Now let's think if `warnings.warn` category should be imported `UserWarning` from builtins? It's built-in. Good.
+
+Now event contract should mention `CallContext.caller_state` unchanged. Good.
+
+Now maybe we need "Full type hints on every signature" includes lambda? no lambdas.
+
+Now code style: Use triple double quotes. Good.
+
+Let's craft final answer with code. Ensure final no analysis. Good.
+
+One more nuance: Python enum `auto()` values are integers. In 3.11+, Enum has `__str__`? no.
+
+If setting member `__doc__` after enum class with auto, maybe the docstrings for members become those strings. Good.
+
+Could maybe if user introspects `BreakerState.CLOSED.__doc__`, it's set. Good.
+
+Potential issue: In call_context dataclass, generated `__init__` signature: `(self, duration_ms: int, endpoint: str | None, caller_state: BreakerState) -> None`. It has full hints. Setting docstring okay.
+
+Potential issue: In breaker_events Protocol, if not runtime_checkable, `BreakerNotifier` methods have docstring and ellipsis. Good.
+
+Could maybe `Protocol` methods need `@abstractmethod`? no.
+
+Now final answer length. Desired oververbosity 9, but code plus docs enough. Maybe after code: short "How to supply NOTIFIER". Good.
+
+Let's write final carefully.

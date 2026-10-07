@@ -1,0 +1,17 @@
+{
+  "W1-ub512-n46": {
+    "note": "ub512 at the winner's ncmoe",
+    "ok": true,
+    "prompt_n": 772
+  },
+  "W2-ub2048-n42": {
+    "note": "ub2048 at the baseline's ncmoe",
+    "ok": false,
+    "cuda": true
+  },
+  "W3-ub768-n46": {
+    "note": "ub768: is 512 special?",
+    "ok": false,
+    "cuda": true
+  }
+}

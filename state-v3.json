@@ -1,0 +1,166 @@
+{
+  "phase": "finish",
+  "done": [
+    {
+      "key": "v3-q2-t10-r1",
+      "kind": "task02",
+      "model": "q2",
+      "temp": 1.0,
+      "seed": 20261005,
+      "status": "SCORED",
+      "gate4": true,
+      "finish": "stop",
+      "notifier": "bound in breaker_events; read: circuit_breaker\u2192breaker_events.NOTIFIER"
+    },
+    {
+      "key": "v3-q2-t10-r2",
+      "kind": "task02",
+      "model": "q2",
+      "temp": 1.0,
+      "seed": 20261006,
+      "status": "SCORED",
+      "gate4": true,
+      "finish": "stop",
+      "notifier": "bound in NONE; annotation-only in breaker_events,circuit_breaker; read: circuit_breaker\u2192getattr(_breaker_events, 'NOTIFIER', None)"
+    },
+    {
+      "key": "v3-q2-t10-r3",
+      "kind": "task02",
+      "model": "q2",
+      "temp": 1.0,
+      "seed": 20261007,
+      "status": "SCORED",
+      "gate4": false,
+      "finish": "stop",
+      "notifier": "bound in NONE; read: NONE"
+    },
+    {
+      "key": "v3-iq3-t10-r1",
+      "kind": "task02",
+      "model": "iq3",
+      "temp": 1.0,
+      "seed": 20261008,
+      "status": "SCORED",
+      "gate4": false,
+      "finish": "stop",
+      "notifier": "bound in NONE; annotation-only in circuit_breaker; read: circuit_breaker(bare)"
+    },
+    {
+      "key": "v3-iq3-t10-r2",
+      "kind": "task02",
+      "model": "iq3",
+      "temp": 1.0,
+      "seed": 20261009,
+      "status": "SCORED",
+      "gate4": false,
+      "finish": "stop",
+      "notifier": "bound in NONE; annotation-only in circuit_breaker; read: circuit_breaker(bare)"
+    },
+    {
+      "key": "v3-iq3-t10-r3",
+      "kind": "task02",
+      "model": "iq3",
+      "temp": 1.0,
+      "seed": 20261010,
+      "status": "VOID_LENGTH",
+      "gate4": null,
+      "finish": "length",
+      "notifier": "bound in NONE; annotation-only in breaker_events; read: NONE"
+    },
+    {
+      "key": "v3-iq3-t10-r3-rerun",
+      "kind": "task02",
+      "model": "iq3",
+      "temp": 1.0,
+      "seed": 20261011,
+      "status": "SCORED",
+      "gate4": true,
+      "finish": "stop",
+      "notifier": "bound in NONE; annotation-only in breaker_events; read: circuit_breaker\u2192breaker_events.NOTIFIER"
+    },
+    {
+      "key": "v3-iq3-t03-r3",
+      "kind": "task02",
+      "model": "iq3",
+      "temp": 0.3,
+      "seed": 20260929,
+      "status": "VOID_LENGTH",
+      "gate4": null,
+      "finish": "length",
+      "notifier": "bound in NONE; read: NONE"
+    },
+    {
+      "key": "v3-iq3-t03-r3-rerun",
+      "kind": "task02",
+      "model": "iq3",
+      "temp": 0.3,
+      "seed": 20260929,
+      "status": "SCORED",
+      "gate4": true,
+      "finish": "stop",
+      "notifier": "bound in NONE; annotation-only in breaker_events; read: circuit_breaker\u2192breaker_events.NOTIFIER"
+    },
+    {
+      "key": "v3-iq3-t03-r4",
+      "kind": "task02",
+      "model": "iq3",
+      "temp": 0.3,
+      "seed": 20260929,
+      "status": "VOID_LENGTH",
+      "gate4": null,
+      "finish": "length",
+      "notifier": "bound in NONE; read: NONE"
+    },
+    {
+      "key": "v3-iq3-t03-r4-rerun",
+      "kind": "task02",
+      "model": "iq3",
+      "temp": 0.3,
+      "seed": 20260929,
+      "status": "VOID_LENGTH",
+      "gate4": null,
+      "finish": "length",
+      "notifier": "bound in NONE; read: NONE"
+    },
+    {
+      "key": "v3-q2-t03-r3",
+      "kind": "task02",
+      "model": "q2",
+      "temp": 0.3,
+      "seed": 20260929,
+      "status": "SCORED",
+      "gate4": true,
+      "finish": "stop",
+      "notifier": "bound in NONE; annotation-only in breaker_events; read: circuit_breaker\u2192breaker_events.NOTIFIER"
+    }
+  ],
+  "best": null,
+  "started": "2026-10-05T17:01",
+  "hard_stop": "2026-10-05T23:01",
+  "updated": "2026-10-05T22:26:50",
+  "skipped_for_time": [
+    "v3-q2-t03-r4"
+  ],
+  "status": "COMPLETE",
+  "finished": "2026-10-05T22:30",
+  "config_touched": false,
+  "verdict": "Keep Q2 (n46/ub2048 recommended as in v2) at --temp 0.3; temp 1.0 showed no measurable gain (3/6 vs 5/6 gate-4, n.s.)",
+  "cells": {
+    "q2_t03": "3/3 pass, 0/3 void",
+    "q2_t10": "2/3 pass, 0/3 void",
+    "iq3_t03": "2/3 pass, 3/6 attempts void",
+    "iq3_t10": "1/3 pass, 1/4 void"
+  },
+  "harness_fix": "W9 extractor (byte-identical on all prior runs; Q2 t10 r3 re-extracted, still FAIL on NOTIFIER)",
+  "artifacts": [
+    "REPORT-v3.md",
+    "DECISIONS-v3.md",
+    "results-v3.jsonl",
+    "task02_v3.py",
+    "run_v3.py",
+    "rescore_v3.py",
+    "summ3.py",
+    "apply-flashnext-v3.sh (NOT run)",
+    "v2-tokens-v3.json"
+  ]
+}

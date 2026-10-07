@@ -1,0 +1,22 @@
+{
+  "2048/512": {
+    "lowest": 42,
+    "safe": 43,
+    "safe_ok": true
+  },
+  "2048/1024": {
+    "lowest": 42,
+    "safe": 43,
+    "safe_ok": true
+  },
+  "2048/2048": {
+    "lowest": 43,
+    "safe": 44,
+    "safe_ok": true
+  },
+  "4096/4096": {
+    "lowest": 44,
+    "safe": 45,
+    "safe_ok": true
+  }
+}

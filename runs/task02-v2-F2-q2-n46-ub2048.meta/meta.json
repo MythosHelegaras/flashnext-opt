@@ -1,0 +1,17 @@
+{
+  "label": "v2-F2-q2-n46-ub2048",
+  "wall_s": 1058.4,
+  "finish_reason": "stop",
+  "content_len": 7070,
+  "reasoning_len": 143854,
+  "prompt_n": 772,
+  "predicted_n": 33928,
+  "predicted_ps": 32.13678933112852,
+  "files_found": [
+    "breaker_events.py",
+    "breaker_state.py",
+    "call_context.py",
+    "circuit_breaker.py"
+  ],
+  "files_missing": []
+}

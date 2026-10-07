@@ -1,0 +1,7 @@
+
+===== [04:13:38] U1-ub2048-1500  (~1500 partial first ubatch, >512 -> predict CRASH)
+  OK prompt_n=1352
+
+===== [04:13:59] U2-ub2048-2500  (~2500 full first ubatch -> predict OK)
+  OK prompt_n=2406
+CRASHTEST3 DONE {"U1-ub2048-1500": true, "U2-ub2048-2500": true}

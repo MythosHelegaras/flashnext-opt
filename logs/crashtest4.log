@@ -1,0 +1,26 @@
+
+===== [04:16:04] V-src-600
+  OK prompt_n=650
+
+===== [04:16:24] V-src-700
+  OK prompt_n=751
+
+===== [04:16:44] V-src-772
+  OK prompt_n=823
+
+===== [04:17:04] V-src-800
+  OK prompt_n=849
+
+===== [04:17:23] V-src-900
+  OK prompt_n=951
+
+===== [04:17:43] V-promptB
+  CRASH cuda=True
+
+CRASHTEST4 DONE
+  V-src-600      prompt_n=   650 -> OK
+  V-src-700      prompt_n=   751 -> OK
+  V-src-772      prompt_n=   823 -> OK
+  V-src-800      prompt_n=   849 -> OK
+  V-src-900      prompt_n=   951 -> OK
+  V-promptB      prompt_n=     - -> CRASH

@@ -1,0 +1,8 @@
+server up, 4s, vram 12590 MiB
+source pool: 16714529 bytes
+p4k: 13437 bytes -> 4000 tokens
+p32k: 89074 bytes -> 32000 tokens
+full128: 333448 bytes -> 120000 tokens
+full256: 648153 bytes -> 240000 tokens
+CORPUS DONE
+server killed

@@ -1,0 +1,38 @@
+{
+  "task02-v2-F-q2-n46-ub2048": {
+    "reasoning_tok": 53142,
+    "content_tok": 1941,
+    "predicted_n": 55086,
+    "predicted_ps": 29.91281847827851,
+    "wall_s": 1844.2,
+    "finish_reason": "stop",
+    "notifier": "bound in NONE; annotation-only in breaker_events; read: circuit_breaker\u2192breaker_events.NOTIFIER"
+  },
+  "task02-v2-F2-q2-n46-ub2048": {
+    "reasoning_tok": 32335,
+    "content_tok": 1589,
+    "predicted_n": 33928,
+    "predicted_ps": 32.13678933112852,
+    "wall_s": 1058.4,
+    "finish_reason": "stop",
+    "notifier": "bound in NONE; annotation-only in breaker_events; read: circuit_breaker\u2192breaker_events.NOTIFIER"
+  },
+  "task02-v2-F-iq3-n46-ub2048": {
+    "reasoning_tok": 34149,
+    "content_tok": 1654,
+    "predicted_n": 35806,
+    "predicted_ps": 30.861372504934636,
+    "wall_s": 1162.7,
+    "finish_reason": "stop",
+    "notifier": "bound in NONE; annotation-only in circuit_breaker; read: circuit_breaker(bare)"
+  },
+  "task02-v2-F2-iq3-n46-ub2048": {
+    "reasoning_tok": 46480,
+    "content_tok": 1738,
+    "predicted_n": 48221,
+    "predicted_ps": 29.69515543393343,
+    "wall_s": 1645.3,
+    "finish_reason": "stop",
+    "notifier": "bound in NONE; annotation-only in breaker_events; read: circuit_breaker\u2192breaker_events.NOTIFIER"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "U1-ub2048-1500": {
+    "note": "~1500 partial first ubatch, >512 -> predict CRASH",
+    "ok": true,
+    "prompt_n": 1352
+  },
+  "U2-ub2048-2500": {
+    "note": "~2500 full first ubatch -> predict OK",
+    "ok": true,
+    "prompt_n": 2406
+  }
+}

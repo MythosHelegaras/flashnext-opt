@@ -1,0 +1,45 @@
+{
+  "T1-win-nowarm-772": {
+    "warmup": false,
+    "first": "task02",
+    "spec": "-ncmoe 46 -t 16 -b 2048 -ub 2048 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0",
+    "ok": false,
+    "err": "Remote end closed connection without response",
+    "cuda_illegal": true
+  },
+  "T2-win-warm-772": {
+    "warmup": true,
+    "first": "task02",
+    "spec": "-ncmoe 46 -t 16 -b 2048 -ub 2048 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0",
+    "ok": true,
+    "prompt_n": 772,
+    "predicted_n": 2000,
+    "finish": "length"
+  },
+  "T3-base-nowarm-772": {
+    "warmup": false,
+    "first": "task02",
+    "spec": "-ncmoe 42 -t 16 -b 2048 -ub 512 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0",
+    "ok": true,
+    "prompt_n": 772,
+    "predicted_n": 2000,
+    "finish": "length"
+  },
+  "T4-win-nowarm-4061": {
+    "warmup": false,
+    "first": "p4k",
+    "spec": "-ncmoe 46 -t 16 -b 2048 -ub 2048 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0",
+    "ok": true,
+    "prompt_n": 4051,
+    "predicted_n": 2000,
+    "finish": "length"
+  },
+  "T5-win-nowarm-772b": {
+    "warmup": false,
+    "first": "task02",
+    "spec": "-ncmoe 46 -t 16 -b 2048 -ub 2048 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0",
+    "ok": false,
+    "err": "Remote end closed connection without response",
+    "cuda_illegal": true
+  }
+}

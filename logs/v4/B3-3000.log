@@ -1,0 +1,34 @@
+538 MiB, 15393 MiB
+loaded in 8s, vram 12138 MiB
+  rep 1/3 done
+  rep 2/3 done
+  rep 3/3 done
+FULL in the same load
+{"FULL_prompt_n": 120182, "FULL_prefill_ps": 750.1118064922001, "FULL_TTFT_s": 160.218782, "FULL_decode_ps": 28.305030293548246, "retrieved": {"early": "1000003", "mid": "1337774", "late": "1675545"}, "needles_ok": true, "finish_ok": true}
+{
+  "P4k_ps": 721.671,
+  "P4k_sd": 0.593,
+  "P4k_n": 4061,
+  "P32k_ps": 757.049,
+  "P32k_sd": 0.146,
+  "TTFT32k_s": 42.349,
+  "TTFT32k_sd": 0.008,
+  "D32k_ps": 36.464,
+  "D32k_sd": 0.093,
+  "P32k_n": 32060,
+  "D32k_predicted_n": [
+    1400,
+    1400,
+    1400
+  ],
+  "D0_ps": 41.107,
+  "D0_sd": 0.104,
+  "D0_predicted_n": [
+    1400,
+    1400,
+    1400
+  ],
+  "T_turn_s": 83.485,
+  "T_turn_sd": 0.105
+}
+PHASE B3 fit3000 DONE Tue Oct  6 01:16:14 PM CST 2026

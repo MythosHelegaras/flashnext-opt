@@ -1,0 +1,102 @@
+
+===== [01:23:02] bench B2-ub2048-n46
+-ncmoe 46 -t 16 -b 2048 -ub 2048 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0
+loaded in 8s, vram 9558 MiB
+  rep 1/3 done
+  rep 2/3 done
+  rep 3/3 done
+{
+  "P4k_ps": 546.422,
+  "P4k_sd": 33.661,
+  "P4k_n": 4061,
+  "P32k_ps": 544.466,
+  "P32k_sd": 19.355,
+  "TTFT32k_s": 58.934,
+  "TTFT32k_sd": 2.138,
+  "D32k_ps": 29.063,
+  "D32k_sd": 0.068,
+  "P32k_n": 32060,
+  "D32k_predicted_n": [
+    1400,
+    1400,
+    1400
+  ],
+  "D0_ps": 35.763,
+  "D0_sd": 0.362,
+  "D0_predicted_n": [
+    1400,
+    1400,
+    1400
+  ],
+  "T_turn_s": 110.546,
+  "T_turn_sd": 2.141
+}
+----- B2-ub2048-n46 rc=0
+
+===== [01:31:21] bench B2-ub1024-n43
+-ncmoe 43 -t 16 -b 2048 -ub 1024 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0
+loaded in 12s, vram 11884 MiB
+  rep 1/3 done
+  rep 2/3 done
+  rep 3/3 done
+{
+  "P4k_ps": 415.031,
+  "P4k_sd": 0.557,
+  "P4k_n": 4061,
+  "P32k_ps": 398.561,
+  "P32k_sd": 11.977,
+  "TTFT32k_s": 80.489,
+  "TTFT32k_sd": 2.461,
+  "D32k_ps": 29.804,
+  "D32k_sd": 0.058,
+  "P32k_n": 32060,
+  "D32k_predicted_n": [
+    1400,
+    1400,
+    1400
+  ],
+  "D0_ps": 36.671,
+  "D0_sd": 0.373,
+  "D0_predicted_n": [
+    1400,
+    1400,
+    1400
+  ],
+  "T_turn_s": 130.818,
+  "T_turn_sd": 2.463
+}
+----- B2-ub1024-n43 rc=0
+
+===== [01:40:51] full B2-FULL-ub2048-n46
+-ncmoe 46 -t 16 -b 2048 -ub 2048 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0
+loaded 9558 MiB; full prompt going in
+{
+  "FULL_prompt_n": 120182,
+  "FULL_prefill_ps": 350.3669505061102,
+  "FULL_TTFT_s": 343.01751299999995,
+  "FULL_decode_ps": 18.503215456966625,
+  "peak_vram_mib": 12484,
+  "retrieved": {
+    "early": "1000003",
+    "mid": "1337774",
+    "late": "1675545"
+  },
+  "needles_ok": true,
+  "finish_ok": true
+}
+----- B2-FULL-ub2048-n46 rc=0
+
+===== [01:47:08] fullprobe B2-probe-ub2048-n45
+-ncmoe 45 -t 16 -b 2048 -ub 2048 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0
+loaded 10470 MiB; prefill probe
+{
+  "load_vram_mib": 10470,
+  "peak_vram_mib": 13376,
+  "completed": true,
+  "reached": 120056,
+  "max_tokens_seen": 120052,
+  "oom_alloc_mib": null,
+  "FULL_prefill_ps": 355.99726280401376
+}
+----- B2-probe-ub2048-n45 rc=0
+PB2 DONE

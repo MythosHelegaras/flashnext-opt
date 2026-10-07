@@ -1,0 +1,8 @@
+{"label": "v4-D-load-n46", "load_s": 4.0, "load_vram_mib": 13704, "board_free_mib": 1685}
+{"label": "v4-D-load-n45", "load_s": 4.0, "load_vram_mib": 14616, "board_free_mib": 773}
+LOAD FAIL: server exited rc=1
+0.00.152.497 I srv  llama_server: initializing ...
+0.00.152.508 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.152.767 W srv  llama_server: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)
+0.00.155.181 I srv    load_model: loading model '/mnt/ai/llm/models/qwen3.8-f
+D LOADS DONE Tue Oct  6 03:08:21 PM CST 2026

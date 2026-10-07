@@ -1,0 +1,25 @@
+cold 300: prose 1033 bytes -> 300 templated tokens
+cold 508: source 2147 bytes -> 508 templated tokens
+cold 777: prose 2477 bytes -> 777 templated tokens
+cold 1016: source 3070 bytes -> 1016 templated tokens
+cold 1500: prose 5532 bytes -> 1500 templated tokens
+cold 2044: source 8263 bytes -> 2044 templated tokens
+cold 3000: prose 10400 bytes -> 3000 templated tokens
+cold 4061: source 14843 bytes -> 4061 templated tokens
+prompt_B templated tokens: 772
+turn 1: 20000 tokens
+turn 2: 3000 tokens
+turn 3: 3000 tokens
+turn 4: 3000 tokens
+turn 5: 3000 tokens
+turn 6: 3000 tokens
+turn 7: 3000 tokens
+turn 8: 3000 tokens
+turn 9: 3000 tokens
+turn 10: 3000 tokens
+turn 11: 3000 tokens
+turn 12: 3000 tokens
+turn 13: 3000 tokens
+turn 14: 3000 tokens
+turn 15: 3000 tokens
+turn 16: 3000 tokens

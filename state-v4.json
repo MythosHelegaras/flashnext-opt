@@ -1,0 +1,234 @@
+{
+  "phase": "done",
+  "started": "2026-10-06T11:50",
+  "hard_stop": "2026-10-06T21:50",
+  "finish_by": "2026-10-06T21:20",
+  "done": [
+    {
+      "key": "v4-A-F-n46",
+      "T_turn": 108.971,
+      "ok": true,
+      "kind": "bench"
+    },
+    {
+      "key": "v4-A-F-n46-session",
+      "kind": "session",
+      "ok": true,
+      "session_s": 1056.39
+    },
+    {
+      "key": "v4-B1-M-exactF",
+      "kind": "sanity",
+      "ok": true,
+      "load_vram": 9996
+    },
+    {
+      "key": "v4-B1-M-rotoff",
+      "kind": "sanity",
+      "ok": true,
+      "load_vram": 9996
+    },
+    {
+      "key": "v4-B1-M-lazy",
+      "kind": "sanity",
+      "ok": true,
+      "load_vram": 9996
+    },
+    {
+      "key": "v4-B1-M-fitoff",
+      "kind": "sanity",
+      "ok": true,
+      "load_vram": 9996
+    },
+    {
+      "key": "v4-B2-M-n46",
+      "T_turn": 86.237,
+      "ok": true,
+      "kind": "bench"
+    },
+    {
+      "key": "v4-B2-M-n46-session",
+      "kind": "session",
+      "ok": true,
+      "session_s": 813.15
+    },
+    {
+      "key": "v4-B2-M-n46-task02",
+      "kind": "task02",
+      "status": "SCORED",
+      "gate4": true
+    },
+    {
+      "key": "v4-B2-M-n46-coldset",
+      "kind": "cold",
+      "ok": true,
+      "passed": 11,
+      "total": 11
+    },
+    {
+      "key": "v4-B3-M-fit3000",
+      "T_turn": 83.485,
+      "ok": true,
+      "kind": "bench"
+    },
+    {
+      "key": "v4-B3-M-fit3000-session",
+      "kind": "session",
+      "ok": true,
+      "session_s": 799.72
+    },
+    {
+      "key": "v4-C1-n46-mtp3-gpu",
+      "kind": "sanity",
+      "ok": true,
+      "load_vram": 14482
+    },
+    {
+      "key": "v4-C1-n46-mtp3-cmoed",
+      "kind": "sanity",
+      "ok": true,
+      "load_vram": 12732
+    },
+    {
+      "key": "v4-C2-n47-k3",
+      "T_turn": 89.778,
+      "ok": true,
+      "kind": "bench"
+    },
+    {
+      "key": "v4-C2-n47-k3-session",
+      "kind": "session",
+      "ok": true,
+      "session_s": 814.44
+    },
+    {
+      "key": "v4-C2-n47-k2",
+      "T_turn": 88.402,
+      "ok": true,
+      "kind": "bench"
+    },
+    {
+      "key": "v4-C2-n47-k2-session",
+      "kind": "session",
+      "ok": true,
+      "session_s": 792.43
+    },
+    {
+      "key": "v4-C2-n47-k1",
+      "T_turn": 89.074,
+      "ok": true,
+      "kind": "bench"
+    },
+    {
+      "key": "v4-C2-n47-k1-session",
+      "kind": "session",
+      "ok": true,
+      "session_s": 839.87
+    },
+    {
+      "key": "v4-C3-n47-k2-full",
+      "T_turn": null,
+      "ok": true,
+      "kind": "bench"
+    },
+    {
+      "key": "v4-C3-n47-k2-coldset",
+      "kind": "cold",
+      "ok": true,
+      "passed": 11,
+      "total": 11
+    },
+    {
+      "key": "v4-C3-n47-k2-task02",
+      "kind": "task02",
+      "status": "SCORED",
+      "gate4": true
+    },
+    {
+      "key": "v4-S2-n47-k2-session",
+      "kind": "session",
+      "ok": true,
+      "session_s": 776.53
+    },
+    {
+      "key": "v4-S2-M-n46-session",
+      "kind": "session",
+      "ok": true,
+      "session_s": 816.87
+    },
+    {
+      "key": "v4-S3-M-n46-session",
+      "kind": "session",
+      "ok": true,
+      "session_s": 814.6
+    },
+    {
+      "key": "v4-S3-n47-k2-session",
+      "kind": "session",
+      "ok": true,
+      "session_s": 779.39
+    },
+    {
+      "key": "v4-D-full256-n47",
+      "kind": "full",
+      "ok": true,
+      "peak": 13278,
+      "needles_ok": true
+    },
+    {
+      "key": "v4-D-full256-n48",
+      "kind": "full",
+      "ok": true,
+      "peak": 12366,
+      "needles_ok": true
+    },
+    {
+      "key": "v4b-256-n48",
+      "T_turn": 88.028,
+      "ok": true,
+      "kind": "bench"
+    },
+    {
+      "key": "v4b-256-n48-session",
+      "kind": "session",
+      "ok": true,
+      "session_s": 825.44
+    },
+    {
+      "key": "v4b-256-n48-coldset",
+      "kind": "cold",
+      "ok": true,
+      "passed": 11,
+      "total": 11
+    },
+    {
+      "key": "v4b-256-n48-task02",
+      "kind": "task02",
+      "status": "SCORED",
+      "gate4": true
+    }
+  ],
+  "best": {
+    "engine": "M",
+    "spec": "-ncmoe 47 -t 16 -b 2048 -ub 2048 + draft-mtp n-max 2 -cmoed",
+    "session_s": 782.78
+  },
+  "phase_C": "ENABLED 12:04: head re-verified at expected path, 2786204800 B, sha256 8087dbb3...a90231 (corrected reference from Zef)",
+  "config_touched": false,
+  "updated": "2026-10-06T18:48:16",
+  "engine_verdict": "M",
+  "mtp_verdict": "YES n-max 2 (n47, -cmoed): session 782.78\u00b18.48 vs 814.87\u00b11.88 (-3.94%)",
+  "phase_D": "256k M: n47 peak 13278 (122 margin), n48 peak 12366, 3/3 stop; MTP+256k OOM",
+  "status": "COMPLETE",
+  "finished": "2026-10-06T15:45",
+  "verdict": "Engine M; MTP yes n-max 2 (n47, --spec-draft-cpu-moe). Option B: M n46 no MTP.",
+  "artifacts": [
+    "REPORT-v4.md",
+    "DECISIONS-v4.md",
+    "results-v4.jsonl",
+    "harness4.py",
+    "accept_v4.py",
+    "apply-flashnext-v4.sh (NOT run)",
+    "run-v4-*.sh"
+  ]
+}

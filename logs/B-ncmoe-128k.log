@@ -1,0 +1,20 @@
+[00:09:53] c=131072 b=2048 ub=512
+  ncmoe 42: load_vram 12590 MiB  free 2555  (4s)  PASS
+  ncmoe 43: load_vram 11678 MiB  free 3461  (4s)  PASS
+  -> lowest ncmoe 42, safe 43
+[00:10:19] c=131072 b=2048 ub=1024
+  ncmoe 42: load_vram 12796 MiB  free 2342  (4s)  PASS
+  ncmoe 43: load_vram 11884 MiB  free 3254  (4s)  PASS
+  -> lowest ncmoe 42, safe 43
+[00:10:45] c=131072 b=2048 ub=2048
+  ncmoe 42: load_vram 13208 MiB  free 1936  (4s)  over
+  ncmoe 43: load_vram 12296 MiB  free 2842  (4s)  PASS
+  ncmoe 44: load_vram 11384 MiB  free 3758  (4s)  PASS
+  -> lowest ncmoe 43, safe 44
+[00:11:24] c=131072 b=4096 ub=4096
+  ncmoe 42: load_vram 14430 MiB  free 696  (4s)  over
+  ncmoe 43: load_vram 13518 MiB  free 1615  (4s)  over
+  ncmoe 44: load_vram 12606 MiB  free 2534  (4s)  PASS
+  ncmoe 45: load_vram 11692 MiB  free 3448  (4s)  PASS
+  -> lowest ncmoe 44, safe 45
+NCMOE SEARCH DONE {"2048/512": {"lowest": 42, "safe": 43, "safe_ok": true}, "2048/1024": {"lowest": 42, "safe": 43, "safe_ok": true}, "2048/2048": {"lowest": 43, "safe": 44, "safe_ok": true}, "4096/4096": {"lowest": 44, "safe": 45, "safe_ok": true}}

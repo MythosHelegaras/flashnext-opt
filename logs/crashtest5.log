@@ -1,0 +1,14 @@
+
+===== [04:20:28] W1-ub512-n46 (ub512 at the winner's ncmoe)
+  OK prompt_n=772
+
+===== [04:20:49] W2-ub2048-n42 (ub2048 at the baseline's ncmoe)
+  CRASH cuda=True
+
+===== [04:21:05] W3-ub768-n46 (ub768: is 512 special?)
+  CRASH cuda=True
+
+CRASHTEST5 DONE
+  W1-ub512-n46   ub512 at the winner's ncmoe      -> OK
+  W2-ub2048-n42  ub2048 at the baseline's ncmoe   -> CRASH
+  W3-ub768-n46   ub768: is 512 special?           -> CRASH

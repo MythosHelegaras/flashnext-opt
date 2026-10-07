@@ -1,0 +1,125 @@
+
+######## phaseC2.py
+===== [02:57:07] C-f16b (identical config, fresh load)
+  loaded 11536 MiB
+  pool tokenised: 240000 tokens
+  f16b L8000-t0: 64 positions
+  f16b L8000-t1: 64 positions
+  f16b L60000-t0: 64 positions
+  f16b L60000-t1: 64 positions
+COLLECT DONE f16b
+  collect rc=0
+{
+  "f16b": {
+    "n_positions": 256,
+    "same_top_token_pct": 97.656,
+    "mean_kl": 0.321,
+    "max_kl": 23.016747
+  },
+  "f16b@L8000": {
+    "n_positions": 128,
+    "same_top_token_pct": 96.094,
+    "mean_kl": 0.625009,
+    "max_kl": 23.016747
+  },
+  "f16b@L60000": {
+    "n_positions": 128,
+    "same_top_token_pct": 99.219,
+    "mean_kl": 0.016991,
+    "max_kl": 1.465254
+  },
+  "q8": {
+    "n_positions": 256,
+    "same_top_token_pct": 96.875,
+    "mean_kl": 0.256486,
+    "max_kl": 23.025348
+  },
+  "q8@L8000": {
+    "n_positions": 128,
+    "same_top_token_pct": 94.531,
+    "mean_kl": 0.508302,
+    "max_kl": 23.025348
+  },
+  "q8@L60000": {
+    "n_positions": 128,
+    "same_top_token_pct": 99.219,
+    "mean_kl": 0.004669,
+    "max_kl": 0.175991
+  },
+  "f16kq8v": {
+    "n_positions": 256,
+    "same_top_token_pct": 98.438,
+    "mean_kl": 0.140929,
+    "max_kl": 13.961831
+  },
+  "f16kq8v@L8000": {
+    "n_positions": 128,
+    "same_top_token_pct": 97.656,
+    "mean_kl": 0.278292,
+    "max_kl": 13.961831
+  },
+  "f16kq8v@L60000": {
+    "n_positions": 128,
+    "same_top_token_pct": 99.219,
+    "mean_kl": 0.003565,
+    "max_kl": 0.046757
+  }
+}
+PHASE C2 DONE
+
+######## phaseDE.py
+
+===== [03:02:00] bench D-lm-none
+-ncmoe 46 -t 16 -b 2048 -ub 2048 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0 -lm none
+loaded in 29s, vram 9558 MiB
+  rep 1/3 done
+  rep 2/3 done
+  rep 3/3 done
+{
+  "P4k_ps": 827.369,
+  "P4k_sd": 37.9,
+  "P4k_n": 4061,
+  "P32k_ps": 727.504,
+  "P32k_sd": 48.518,
+  "TTFT32k_s": 44.204,
+  "TTFT32k_sd": 3.057,
+  "D32k_ps": 27.701,
+  "D32k_sd": 1.222,
+  "P32k_n": 32060,
+  "D32k_predicted_n": [
+    1400,
+    1400,
+    1400
+  ],
+  "D0_ps": 34.466,
+  "D0_sd": 1.286,
+  "D0_predicted_n": [
+    1400,
+    1400,
+    1400
+  ],
+  "T_turn_s": 98.354,
+  "T_turn_sd": 3.88
+}
+----- D-lm-none rc=0
+
+===== [03:10:06] reuse E-reuse-default
+-ncmoe 46 -t 16 -b 2048 -ub 2048 -c 131072 --cache-type-k q8_0 --cache-type-v q8_0
+{
+  "turn1": {
+    "prompt_n": 60023,
+    "prompt_ms": 141252.961,
+    "prompt_ps": 424.93268512792446,
+    "wall_s": 147.49
+  },
+  "turn2": {
+    "prompt_n": 2218,
+    "prompt_ms": 7387.804,
+    "prompt_ps": 300.2245322155271,
+    "wall_s": 12.73
+  },
+  "reuse_ratio": 0.037
+}
+----- E-reuse-default rc=0
+PHASE DE DONE
+C2+DE ALL DONE
