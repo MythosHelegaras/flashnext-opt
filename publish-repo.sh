@@ -34,6 +34,12 @@ if [ "$INCLUDE_CUDA_CORPUS" != "1" ]; then
 fi
 rsync -a "${EXCL[@]}" "$SRC/" "$DST/"
 
+# --- 1b. licenses: MIT holder = your GitHub display name (falls back to login) ---
+[ -f "$DST/LICENSE" ] && [ -f "$DST/LICENSE-DATA" ] || { echo "LICENSE or LICENSE-DATA missing in $SRC"; exit 1; }
+HOLDER="${COPYRIGHT_HOLDER:-$(gh api user -q '.name // .login')}"
+python3 -c 'import sys; p=sys.argv[1]; t=open(p).read(); open(p,"w").write(t.replace("__COPYRIGHT_HOLDER__", sys.argv[2]))' "$DST/LICENSE" "$HOLDER"
+echo "MIT copyright holder: $HOLDER"
+
 # --- 2. checksums for the corpus files, so a regenerated corpus can be verified ---
 ( cd "$SRC/corpus" && sha256sum p4k.txt p32k.txt full128.txt full256.txt session.json cold/*.json ) > "$DST/corpus/SHA256SUMS"
 
@@ -71,6 +77,7 @@ EOF
 if grep -rIlE --exclude=publish-repo.sh 'shell-snapshots|crashpad|crash-reporter|Zef-Desktop|BEGIN [A-Z ]*PRIVATE KEY|ghp_[A-Za-z0-9]{20}|hf_[A-Za-z0-9]{20}|sk-[A-Za-z0-9]{20}' "$DST"; then
   echo "ABORT: sensitive pattern found in the files above."; exit 1
 fi
+grep -q '__COPYRIGHT_HOLDER__' "$DST/LICENSE" && { echo "ABORT: LICENSE holder not filled"; exit 1; }
 BIG="$(find "$DST" -type f -size +50M)"; [ -z "$BIG" ] || { echo "ABORT: file >50MB: $BIG"; exit 1; }
 if find "$DST" -type f -exec file {} + | grep -q 'ELF'; then echo "ABORT: binary found"; exit 1; fi
 
