@@ -44,7 +44,7 @@ Yes — the "3-bit" file is *smaller* than the "2-bit" file. Keep that in mind f
 
 ## M3. How the runs were executed: an unattended agent with a short leash
 
-Each run was a written mission brief handed to Claude Code, which then drove the benchmarks **unattended on Monster** [meth-overnight-unattended]. Run 1 was a true overnight session (2026-09-28 23:37 → 09-29 04:26); Runs 2–4 ran unattended during the day (Run 2: 10-05 11:53–16:55; Run 3: 10-05 17:01–22:30; Run 4: 10-06 11:50–15:45, with follow-on 256k rows through ~18:48) [run-1..4.md]. So "overnight" describes the protocol more than the clock.
+Each run was a written mission brief handed to Claude Code, which then drove the benchmarks **unattended on Monster** [meth-overnight-unattended]. Run 1 was a true overnight session (2026-09-28 23:37 → 09-29 04:30, per the `REPORT.md` header); Runs 2–4 ran unattended during the day (Run 2: 10-05 11:53–16:55; Run 3: 10-05 17:01–22:30; Run 4: 10-06 11:50–15:45, with follow-on 256k rows through ~18:48) [run-1..4.md]. So "overnight" describes the protocol more than the clock.
 
 The leash, in all briefs [METHOD_PROMPTS.md]:
 
@@ -80,7 +80,7 @@ T_turn = TTFT32k + 1500 / D32k
 
 i.e., prefill a fresh 32k prompt, then decode 1,500 tokens.
 
-**Run 2+ metric — `session_s`.** After Run 1 I realized `T_turn` doesn't look like how I work. My OpenCode sessions *grow*: each turn adds a few thousand tokens to a long context that's mostly reused (Run 1 measured 96.3% prefix reuse on a follow-up after a 60k turn [r1-prefix-reuse]). So from Run 2 the primary metric became a growing multi-turn session — a 20k-token start followed by 15 turns of ~3k tokens each [meth-metric-shift-session; METHOD_PROMPTS.md v2]:
+**Run 2+ metric — `session_s`.** After Run 1 I realized `T_turn` doesn't look like how I work. My OpenCode sessions *grow*: each turn adds a few thousand tokens to a long context that's mostly reused (Run 1 measured 96.30% prefix reuse on a follow-up after a 60k turn [r1-prefix-reuse]). So from Run 2 the primary metric became a growing multi-turn session — a 20k-token start followed by 15 turns of ~3k tokens each [meth-metric-shift-session; METHOD_PROMPTS.md v2]:
 
 ```
 session_s = Σ TTFT_turn + Σ (1500 / decode_tps_turn)
@@ -111,7 +111,7 @@ Why cold starts: the Run 1 failure (§R2) only appeared when Task 02's prompt wa
 
 ## M7. Task 02: the quality gate
 
-I don't use a quiz to judge quality. I use **Task 02**: one prompt (**Prompt B**) asks the model to write a **four-file Python circuit-breaker package** — `breaker_state.py`, `call_context.py`, `breaker_events.py`, `circuit_breaker.py` — and then a separate `probe.py` scores what it wrote, mechanically [meth-task02-what; TASK02_GATE.md]. Prompt B is Prompt A plus a short "invariant discipline" clause. (The full prompt text isn't in this package, so I don't quote it here.)
+I don't use a quiz to judge quality. I use **Task 02**: one prompt (**Prompt B**) asks the model to write a **four-file Python circuit-breaker package** — `breaker_state.py`, `call_context.py`, `breaker_events.py`, `circuit_breaker.py` — and then a separate `probe.py` scores what it wrote, mechanically [meth-task02-what; TASK02_GATE.md]. Prompt B is Prompt A plus a short "invariant discipline" clause. The full text of Prompts A and B is in `inputs/flashnext-eval-python-task02.md`; Prompt B exactly as sent is in `corpus/cold/B.json`.
 
 **Clean room.** The run directory starts empty. Prompt and probe live outside it during generation, and the probe is copied in only at score time; a probe sitting in the working directory during generation counts as contamination. Response, reasoning and timings go to a sibling `.meta` directory [meth-task02-cleanroom].
 
@@ -165,10 +165,10 @@ Absolute speeds are **only comparable within a run**: Run 2 used a rebuilt binar
 
 | Run | What I asked | What I found | What changed in production |
 |---|---|---|---|
-| 1 | Best config vs. shipped | A **−34.6% `T_turn`** candidate that crashed the server on a normal prompt | **Nothing.** NO CHANGE |
-| 2 | Q2 vs IQ3 (patched fork) | The patch fixed the crash (11/11 cold). In sessions the ub2048 win was **−8.8%**, not −34%. Q2 won on the gate | Nothing that night. I applied it myself later (before Run 4) |
+| 1 | Best config vs. shipped | A **−34.56% `T_turn`** candidate that crashed the server on a normal prompt | **Nothing.** NO CHANGE |
+| 2 | Q2 vs IQ3 (patched fork) | The patch fixed the crash (11/11 cold). In sessions the ub2048 win was **−8.77%**, not the −34.56% `T_turn` suggested. Q2 won on the gate | Nothing that night. I applied it myself later (before Run 4) |
 | 3 | Temp 1.0 vs 0.3 | 1.0 didn't help (3/6 vs 5/6, n.s.). IQ3 hit the 60k cap 4/10 times | Nothing. Keep 0.3 |
-| 4 | Fork vs mainline; MTP | Mainline **−23% session**, **−2,004 MiB** peak VRAM; MTP n-max 2 another **−3.94%** | Nothing by the agent. M + MTP *recommended* |
+| 4 | Fork vs mainline; MTP; 256k | Mainline **−22.86% session**, **−2,004 MiB** peak VRAM; MTP n-max 2 another **−3.94%**; 256k fits at n48 but not together with MTP | Nothing by the agent. After the v4b gating run I applied M, n48, 256k, no MTP myself |
 
 **Table T0. Config evolution: what was live vs. recommended** (comparison_table.md §A)
 
@@ -181,22 +181,24 @@ Absolute speeds are **only comparable within a run**: Run 2 used a rebuilt binar
 | Run 4 start | F | Q2 | 46 | 2048 | 0.3 | Live (Zef applied Run 2 recommendation) [r4-live-already-n46] |
 | Run 4 recommend A | **M mainline** | Q2 | **47** | 2048 | 0.3 | **+ MTP n-max 2** — recommended, not applied |
 | Run 4 recommend B | M | Q2 | 46 | 2048 | 0.3 | No MTP — recommended, not applied |
+| **What I applied (2026-10-06/07)** | **M mainline** | Q2 | **48** | 2048 | 0.3 | **256k context, no MTP.** Applied by me after the v4b gating run passed (`session_s` 825.44 s, 11/11 cold, Task 02 PASS, FULL peak 12,366 MiB). MTP and 256k could not load together at ub 2048, so I chose twice the context over MTP's −3.94% [r4-applied-256k-n48] |
 
-This table is the full config story for the paper: what was live, what each run recommended, and what I applied myself. The series ends at Run 4.
+This table is the full config story for the paper: what was live, what each run recommended, and what I applied myself. The series ends with the 256k n48 config running, not with the Run 4 recommendation.
 
-## R2. Run 1 — the −34.6% win I couldn't ship
+## R2. Run 1 — the −34.56% win I couldn't ship
 
-**Baseline** (shipped: F, Q2, n42/b2048/ub512, 128k): `T_turn` **168.945 s**, P32k 270.14 t/s, D32k 29.863 t/s, FULL peak **13,020 MiB** [r1-baseline-tturn]. Decode fell off a cliff with depth: D0 36.373 → D32k 29.863 (−17.9%) → FULL 18.810 t/s (−48.3% from D0) [r1-decode-decay].
+**Baseline** (shipped: F, Q2, n42/b2048/ub512, 128k): `T_turn` **168.945 s**, P32k 270.14 t/s, D32k 29.863 t/s, FULL peak **13,020 MiB** [r1-baseline-tturn]. Decode fell off a cliff with depth: D0 36.373 → D32k 29.863 (−17.90%) → FULL 18.810 t/s (−48.29% from D0) [r1-decode-decay].
 
 **Table T1. ubatch × ncmoe ladder** (F unpatched, Q2, 128k; comparison_table.md §B)
 
 | Config | P32k t/s | `T_turn` s | vs base | FULL peak MiB | Outcome |
 |---|---|---|---|---|---|
 | n42 ub512 (shipped) | 270.1 | 168.95 | — | 13,020 | PASS / live |
-| n42 ub1024 | 402.9 | 130.33 | −22.9% | 13,982 | FAIL VRAM gate |
-| n43 ub2048 | 566.5 | 107.01 | −36.7% | OOM @ 92,202 tok | FAIL |
-| n44 ub4096 | 704.1 | 96.52 | −42.9% | OOM @ 61,482 tok | FAIL |
-| **n46 ub2048** | 544.5 | **110.55** | **−34.6%** | **12,484** | Numbers PASS → **sanity FAIL (crash)** |
+| n42 ub1024 | 402.9 | 130.33 | −22.86% | 13,982 | FAIL VRAM gate |
+| n43 ub1024 (runner-up) | 398.6 | 130.82 | −22.57% | 13,070 | Numbers PASS → **sanity FAIL (crash)** |
+| n43 ub2048 | 566.5 | 107.01 | −36.66% | OOM @ 92,202 tok | FAIL |
+| n44 ub4096 | 704.1 | 96.52 | −42.87% | OOM @ 61,482 tok | FAIL |
+| **n46 ub2048** | 544.5 | **110.55** | **−34.56%** | **12,484** | Numbers PASS → **sanity FAIL (crash)** |
 
 So, on paper: n46/ub2048 was a third faster *and* used 536 MiB *less* peak VRAM than what I was shipping [r1-candidate-blocked]. Then it crashed.
 
@@ -204,8 +206,8 @@ So, on paper: n46/ub2048 was a third faster *and* used 536 MiB *less* peak VRAM 
 
 **Other Run 1 findings:**
 - **Load-time VRAM lies.** The full-window surcharge over load was **+430 MiB at ub512** and **+1,186 MiB at ub1024**, not the blanket +308 MiB I'd been assuming [r1-vram-surcharge]. One likely contributor: the fork re-planned the graph every batch (`graphs reused = 0`) and mispredicted its compute buffer (REPORT.md; mechanism inferred, not isolated).
-- **KV q8 stays.** q8_0 KV matched the f16 reference top token 96.875% of the time over 256 points. An f16 *reload of itself* only scored 97.656%. That's within noise, so q8 stays [r1-kv-q8-stays].
-- **Prefix reuse already works.** After a 60,023-token turn, the follow-up reused **96.3%** of the context (reuse_ratio 0.037) [r1-prefix-reuse]. This is the number that pushed me to the session metric.
+- **KV q8 stays.** q8_0 KV matched the f16 reference top token 96.875% of the time (248 of 256 points). An f16 *reload of itself* only scored 97.656% (250 of 256). That's within noise, so q8 stays [r1-kv-q8-stays].
+- **Prefix reuse already works.** After a 60,023-token turn, the follow-up reused **96.30%** of the context (reuse_ratio 0.037) [r1-prefix-reuse]. This is the number that pushed me to the session metric.
 - **`-lm none`** got P32k up to 727.5 t/s, but decode fell below the 95% floor and MemAvailable dropped to 5.47 GiB. Rejected. Thread variants had no effect, and 256k at ub2048 n46 OOM'd before 90% fill (REPORT.md).
 
 **Verdict: NO CHANGE.** Config stayed at n42/ub512. The apply script was written and never run [r1-verdict-no-change].
@@ -219,12 +221,12 @@ So, on paper: n46/ub2048 was a third faster *and* used 536 MiB *less* peak VRAM 
 | Metric | Q2 n46/ub2048 | IQ3 n46/ub2048 | Q2 n42/ub512 (shipped) |
 |---|---|---|---|
 | P32k t/s | 558.8 | 576.9 | 280.0 |
-| D0 t/s | 36.42 | 34.83 (−4.4%) | 37.90 |
-| D32k t/s | 29.50 | 28.42 (−3.7%) | 30.56 |
+| D0 t/s | 36.42 | 34.83 (−4.37%) | 37.90 |
+| D32k t/s | 29.50 | 28.42 (−3.66%) | 30.56 |
 | `T_turn` s | 108.2 | 108.4 | 163.6 |
 | FULL pref / dec t/s | 351.2 / 18.83 | 371.1 / 19.01 | 221.5 / 19.81 |
 | FULL peak MiB | **12,486** | 12,978 | 13,020 |
-| **`session_s`** | **1,046.1** | 1,077.2 (**1.030×**) | 1,146.7 |
+| **`session_s`** | **1,046.14** | 1,077.22 (**+2.97%**) | 1,146.73 |
 | Cold starts | 11/11 | 11/11 | — |
 | Task 02 Gate 4 | **2/2** | **1/2** | — |
 
@@ -234,8 +236,8 @@ Same change (n42/ub512 → n46/ub2048), two metrics:
 
 | Metric | Shipped | n46/ub2048 | Δ |
 |---|---|---|---|
-| `T_turn` (synthetic fresh 32k) | 163.6 s | 108.2 s | **−33.8%** |
-| `session_s` (growing session) | 1,146.7 s | 1,046.1 s | **−8.8%** |
+| `T_turn` (synthetic fresh 32k) | 163.6 s | 108.2 s | **−33.86%** |
+| `session_s` (growing session) | 1,146.73 s | 1,046.14 s | **−8.77%** |
 
 [r2-session-vs-tturn; r2-best-q2]
 
@@ -243,7 +245,7 @@ The big ubatch is basically a *prefill* win. In a growing session most of the co
 
 ### R3.2 Q2 vs IQ3
 
-On speed, IQ3 came in at 1.030× Q2 on `session_s`. That's inside my 3% noise floor (so "no difference"), and well inside the 1.10× I'd agreed to accept for IQ3 [r2-iq3-close-but-gate4]. It had faster prefill, slower decode (−4.4% D0), and 492 MiB more peak VRAM. Its per-layer VRAM also wasn't flat (637.5–1,137.5 MiB per layer vs a flat 912 MiB for Q2 in Run 1), with the late GPU layers heavier (REPORT.md, REPORT-v2.md).
+On speed, IQ3 came in at +2.97% vs Q2 on `session_s` (one rep each). That's inside my 3% noise floor (so "no difference"), and well inside the 1.10× I'd agreed to accept for IQ3 [r2-iq3-close-but-gate4]. It had faster prefill, slower decode (−4.37% D0), and 492 MiB more peak VRAM. Its per-layer VRAM also wasn't flat (637.5–1,137.5 MiB per layer vs a flat 912 MiB for Q2 in Run 1), with the late GPU layers heavier (REPORT.md, REPORT-v2.md).
 
 On the gate, it went **1/2**. The failed run put a bare `NOTIFIER` annotation in `circuit_breaker.py` → `NameError`. The diagnostic probe passed it, so the logic was right and the placement was wrong [r2-iq3-notifier].
 
@@ -280,7 +282,7 @@ All **4** Gate-4 failures were the same thing: NOTIFIER bound in the wrong modul
 
 IQ3 hit the 60k length cap on **4/10** attempts, vs Q2 **0/6** (Fisher p ≈ 0.23, n.s.) [r3-iq3-overthink]. Reading the voids, they're self-audit spirals, not hard repetition loops. Not significant, but it's expensive in practice:
 
-**Table T4. Wall-clock cost per *passing* Task 02** (tokens ÷ a common decode rate, voids included) [r3-cost-per-pass]
+**Table T4. Time cost per *passing* Task 02, counting voided attempts** (tokens ÷ a common decode rate; not measured wall-clock) [r3-cost-per-pass]
 
 | Cell | Seconds per pass |
 |---|---|
@@ -300,25 +302,25 @@ The code extractor took the *first* code block that named a file. In one run, a 
 
 ## R5. Run 4 — same model, same flags, different engine
 
-At the start of Run 4, production was already F n46/ub2048 (I'd applied the Run 2 recommendation) [r4-live-already-n46]. On the new driver, F re-measured within noise of Run 2 F (`session_s` +1.0%, FULL peak identical) (REPORT-v4.md).
+At the start of Run 4, production was already F n46/ub2048 (I'd applied the Run 2 recommendation) [r4-live-already-n46]. On the new driver, F re-measured within noise of Run 2 F (`session_s` +0.98%, FULL peak identical) (REPORT-v4.md).
 
 **Table T5. Engine F vs M, and MTP on M** (Q2, 128k, ub2048; comparison_table.md §E, REPORT-v4.md)
 
 | Metric | F n46 | M n46 | M + MTP n-max 2, n47 |
 |---|---|---|---|
-| P32k t/s | 554.1 | **728.6** (+31.5%) | 677.1 |
-| D0 t/s | 35.77 | **40.13** (+12.2%) | 37.17 (−7.4% vs M) |
-| D32k t/s | 29.36 | 35.52 (+21%) | 36.54 |
+| P32k t/s | 554.1 | **728.6** (+31.49%) | 677.1 (−7.07% vs M) |
+| D0 t/s | 35.77 | **40.13** (+12.19%) | 37.17 (−7.38% vs M) |
+| D32k t/s | 29.36 | 35.52 (+20.98%) | 36.54 |
 | FULL pref / dec t/s | 357 / 19.22 | 723.5 / 28.13 | 671.8 / **35.53** |
 | FULL peak MiB | 12,486 | **10,482** (−2,004) | 12,686 |
 | Margin to 13,400 gate | 914 | **2,918** | 714 |
-| **`session_s`** | 1,056.4 | **814.9 ±1.9** (−23%) | **782.8 ±8.5** (−3.94% vs M) |
+| **`session_s`** | 1,056.39 | **814.87 ±1.9** (−22.86%) | **782.78 ±8.48** (−3.94% vs M) |
 | Cold starts | (11/11 in Run 2) | 11/11 | 11/11 |
 | Task 02 Gate 4 | (PASS in Run 2) | PASS | PASS |
 
 ### R5.1 Engine M
 
-Same weights and same flags, and mainline was **23% faster per session** with **~2 GB less peak VRAM** at full window [r4-engine-m]. The gap widened with depth: decode was +12% at D0, +21% at D32k, and +46% at full fill [r4-why-m-faster]. The mechanism looks like memory planning. F's CUDA0 compute buffer grew to **4,469 MiB** at full fill against an expected 1,722, while M's surcharge was fixed at load (**+486 MiB**, the same at 128k and 256k) [r4-why-m-faster]. On Task 02, M read NOTIFIER from `breaker_events` and passed.
+Same weights and same flags, and mainline was **22.86% faster per session** with **~2 GB less peak VRAM** at full window [r4-engine-m]. The gap widened with depth: decode was +12.19% at D0, +20.98% at D32k, and +46.36% at full fill [r4-why-m-faster]. The mechanism looks like memory planning. F's CUDA0 compute buffer grew to **4,469 MiB** at full fill against an expected 1,722, while M's surcharge was fixed at load (**+486 MiB**, the same at 128k and 256k) [r4-why-m-faster]. On Task 02, M read NOTIFIER from `breaker_events` and passed.
 
 That's the biggest single win in the series, and it came from swapping the engine, not from tuning a flag.
 
@@ -328,15 +330,15 @@ That's the biggest single win in the series, and it came from swapping the engin
 
 | n-max | `session_s` | vs M |
 |---|---|---|
-| 1 | 839.87 | +3.3% |
-| **2** | **792.43** | **−2.5%** |
-| 3 | 814.44 | +0.2% |
+| 1 | 839.87 | +3.29% |
+| **2** | **792.43** | **−2.55%** |
+| 3 | 814.44 | +0.16% |
 
 n-max 2 then got extra reps: **782.78 ±8.48 s** vs M **814.87 ±1.9 s**, i.e. **−3.94%** over 3 reps. That's above the 3% floor, and the 32.1 s gap is larger than 2× the combined sd (~17.4 s). Gates 1–4 passed [r4-mtp-yes].
 
 How to read it:
 - **Modest and content-dependent.** Acceptance ran ~62–75% on code and ~43–53% on prose, 66.9% across the session (REPORT-v4.md).
-- **It costs you shallow and pays you deep.** −7% on D0/P32k, but FULL decode 35.53 vs 28.13 t/s.
+- **It costs you shallow and pays you deep.** −7.38% on D0 and −7.07% on P32k, but FULL decode 35.53 vs 28.13 t/s.
 - **Confound:** the MTP config ran at **n47** (one more expert layer on CPU to fit the draft head), and the M baseline ran at n46. The −3.94% is "M+MTP n47 vs M n46," not a pure MTP effect.
 - **Tighter on VRAM:** 714 MiB margin vs 2,918.
 - Earlier "MTP is slower" folklore on this box came from a different, older experimental patch. This was the merged implementation.
@@ -352,7 +354,7 @@ How to read it:
 | 47 | 13,278 | 122 (inside noise, don't ship) | 684.7 / 21.44 |
 | **48** | **12,366** | **1,034** | 690.8 / 21.34 |
 
-n48 means all routed experts on CPU. In a follow-on, n48 at 256k measured `session_s` 825.44 s, 11/11 cold, Task 02 PASS (status `v4b-256-n48*`; **at most ~1.3% slower** than M n46 at 128k — under the 3% noise rule, but not identical: 825 s vs 815 ±1.9 s). **MTP + 256k ran out of memory** (the draft compute buffer) [r4-256k].
+n48 means all routed experts on CPU. In a follow-on, n48 at 256k measured `session_s` 825.44 s, 11/11 cold, Task 02 PASS (status `v4b-256-n48*`; **at most ~1.30% slower** than M n46 at 128k — under the 3% noise rule, but not identical: 825 s vs 815 ±1.9 s). **MTP + 256k ran out of memory**: n48 + MTP at ub 2048 failed to load (`cudaMalloc` out of memory on a 2,509.67 MiB draft compute buffer; `REPORT-v4.md` line 105, `logs/v4-D-load-n48-mtpk2-256k.server.log`) [r4-256k]. No later test in the repo shows MTP and 256k fitting together.
 
 **Table T7b. 256k snapshots across runs** (comparison_table.md §F; within-run only, different binaries/engines)
 
@@ -365,6 +367,8 @@ n48 means all routed experts on CPU. In a follow-on, n48 at 256k measured `sessi
 
 **Verdict:** Option A = M + MTP n-max 2 (n47); Option B = M n46 without MTP. The apply script was written, **not run**. llama-swap was still F n46/ub2048 when the run finished [r4-verdict].
 
+**What I applied.** After the v4b gating run passed, I moved llama-swap to M, Q2, n48, ub 2048, `-c 262144`, temp 0.3, no MTP (`apply-flashnext-ctx.sh`, `set-opencode-flashnext-limits.sh`; confirmed live on 2026-10-07) [r4-applied-256k-n48]. MTP and 256k couldn't load together at ub 2048, and I chose twice the context over MTP's −3.94% `session_s`.
+
 ## R6. Why Q2 beat IQ3 *here*
 
 The intuition: a "3-bit" quant should be better than a "2-bit" one. Here's what I measured on this box and this task:
@@ -372,12 +376,12 @@ The intuition: a "3-bit" quant should be better than a "2-bit" one. Here's what 
 | Evidence | Q2 (UD-Q2_K_XL) | IQ3 (GSQ-RCO IQ3_XXS) | Source |
 |---|---|---|---|
 | File size | 78.86 GB | **75.83 GB** (smaller) | r2-iq3-smaller-disk |
-| `session_s` (Run 2) | 1,046.1 s | 1,077.2 s (1.030×, = no difference) | r2-iq3-close-but-gate4 |
-| D0 decode | 36.42 | 34.83 (−4.4%) | Table T2 |
+| `session_s` (Run 2) | 1,046.14 s | 1,077.22 s (+2.97%, one rep each: no difference shown) | r2-iq3-close-but-gate4 |
+| D0 decode | 36.42 | 34.83 (−4.37%) | Table T2 |
 | FULL peak MiB | 12,486 | 12,978 | Table T2 |
 | Gate 4, all Prompt B runs | Run 2 2/2; Run 3 t0.3 3/3 (pooled with Run 2), t1.0 2/3 | Run 2 1/2; Run 3 t0.3 2/3 (pooled with Run 2), t1.0 1/3 | Tables T2, T3 |
 | 60k voids (Run 3) | 0/6 | 4/10 (p ≈ 0.23) | r3-iq3-overthink |
-| Seconds per passing task | ~1,437 (t0.3) | ~5,500–5,640 | r3-cost-per-pass |
+| Seconds per passing task (voided attempts included) | ~1,437 (t0.3) | ~5,500–5,640 | r3-cost-per-pass |
 | Diagnostic (logic) probe on failures | PASS | PASS | r3-notifier-all-fails |
 
 What this does and doesn't mean:
@@ -388,18 +392,18 @@ What this does and doesn't mean:
 
 ## R7. Being honest about "no change"
 
-Across four runs the agent changed production **zero** times. Run 1 had the authority to and declined because a gate failed. Runs 2–4 weren't allowed to. Every production change from this series, I applied myself after reading the report. The Run 1 "NO CHANGE" is the result I'm proudest of: a 34.6% win that would have crashed the server on the first real request. The series for this paper ends here: Q2 is the winning path, and the dials that earned it are above.
+Across four runs the agent changed production **zero** times. Run 1 had the authority to and declined because a gate failed. Runs 2–4 weren't allowed to. Every production change from this series, I applied myself after reading the report. The Run 1 "NO CHANGE" is the result I'm proudest of: a 34.56% win that would have crashed the server on the first real request. The series for this paper ends with what I applied after Run 4: M, Q2, n48, 256k, no MTP. Q2 is the winning path, and the dials that earned it are above.
 
 ## R8. Caveats
 
 1. **Don't chain run-to-run speedups.** Run 1 absolute numbers are on an unpatched binary; Run 2 rebuilt it; Run 4 changed the driver and added an engine. "Night 1 → night 4 = X% faster" is not a claim this paper makes.
 2. **Sampling results are not significant** (p ≈ 0.55 pass rate; p ≈ 0.23 voids). Direction only.
 3. **IQ3 is not "broken."** Logic passed on the diagnostic every time; the failures were integration/placement and voids, under a prompt I've since found to be ambiguous.
-4. **M + MTP is recommended from this series, not confirmed as the live daily config in these reports.** Option A (M + MTP n-max 2 at n47) and Option B (M at n46 without MTP) are the Run 4 recommendations; the agent did not apply them.
+4. **M + MTP is not live.** Option A (M + MTP n-max 2 at n47) and Option B (M at n46 without MTP) were the Run 4 recommendations; the agent did not apply them. What I applied is M, Q2, n48, 256k, no MTP, because MTP and 256k could not load together at ub 2048. A future test that fits both would have to be added to the repo before this changes.
 5. **`session_s` is a modeled session** (measured TTFT/decode + an assumed 1,500 output tokens per turn), not a stopwatch on real OpenCode use.
 6. **Task 02 is one task.** No MMLU or other standard benchmarks were run, and no KLD measurement either.
 7. **One box, one model, one workload.** Gate-4 numbers were scored under Prompt B, which I've since recognized as ambiguous on NOTIFIER placement.
-8. **Rep counts.** Run 4 M and M+MTP `session_s` are 3-rep means ±sd. Rep counts for other `session_s` cells aren't stated in the curated files and should be checked in the raw jsonl before final publication.
+8. **Rep counts.** Run 4 M and M+MTP `session_s` are 3-rep means ±sd. Every other `session_s` cell is 1 rep: Run 2 (Q2 and IQ3 at n46/ub2048, Q2 n42/ub512), Run 4 F n46, and the 256k n48 follow-on. The repo README's repetitions table explains how far each single-rep claim holds.
 
 ## R9. Fact-id index
 
@@ -409,6 +413,6 @@ Across four runs the agent changed production **zero** times. Run 1 had the auth
 | Run 1 | r1-baseline-tturn, r1-decode-decay, r1-candidate-blocked, r1-ub-crash, r1-vram-surcharge, r1-kv-q8-stays, r1-prefix-reuse, r1-verdict-no-change |
 | Run 2 | r2-patch-fixes-crash, r2-best-q2, r2-session-vs-tturn, r2-iq3-close-but-gate4, r2-iq3-notifier, r2-iq3-smaller-disk, r2-256k-ub512, r2-verdict-q2 |
 | Run 3 | r3-temp10-no-help, r3-notifier-all-fails, r3-iq3-overthink, r3-cost-per-pass, r3-harness-bug, r3-opencode-limit, r3-verdict |
-| Run 4 | r4-live-already-n46, r4-engine-m, r4-why-m-faster, r4-mtp-nmax, r4-mtp-yes, r4-fit-rejected, r4-256k, r4-mtp-head-hash, r4-verdict |
+| Run 4 | r4-live-already-n46, r4-engine-m, r4-why-m-faster, r4-mtp-nmax, r4-mtp-yes, r4-fit-rejected, r4-256k, r4-mtp-head-hash, r4-verdict, r4-applied-256k-n48 |
 
 Raw files at the root of the [flashnext-opt repo](https://github.com/MythosHelegaras/flashnext-opt) take precedence if any number here is disputed.
