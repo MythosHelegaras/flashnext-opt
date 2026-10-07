@@ -30,10 +30,10 @@
       "id": "r1-candidate-blocked",
       "run": 1,
       "type": "result",
-      "claim": "Best candidate ncmoe46/ub2048 cuts T_turn 34.6% (110.55 s) and FULL peak 12484 MiB (−536 vs baseline) but must not ship",
+      "claim": "Best candidate ncmoe46/ub2048 cuts T_turn 34.56% (110.55 s) and FULL peak 12484 MiB (−536 vs baseline) but must not ship",
       "numbers": {
         "T_turn_s": 110.55,
-        "delta_pct": -34.6,
+        "delta_pct": -34.56,
         "FULL_peak_MiB": 12484
       },
       "caveats": "Blocked by sanity gate (CUDA abort)",
@@ -70,7 +70,9 @@
       "numbers": {
         "q8_same_top_pct": 96.875,
         "f16_noise_floor_pct": 97.656,
-        "n": 256
+        "n": 256,
+        "q8_agree": "248/256",
+        "f16_reload_agree": "250/256"
       },
       "caveats": "mean KL unreliable (top-20 mismatches); KLD tooling absent",
       "source_file": "DECISIONS.md D22"
@@ -79,7 +81,7 @@
       "id": "r1-prefix-reuse",
       "run": 1,
       "type": "result",
-      "claim": "Prefix reuse works at defaults: 60k turn then follow-up reuses 96.3% of context (reuse_ratio 0.037)",
+      "claim": "Prefix reuse works at defaults: 60k turn then follow-up reuses 96.30% of context (reuse_ratio 0.037)",
       "numbers": {
         "reuse_ratio": 0.037,
         "reuse_pct": 96.3,
@@ -148,11 +150,11 @@
       "id": "r2-best-q2",
       "run": 2,
       "type": "result",
-      "claim": "Best Q2 = n46/ub2048: T_turn 108.2 s (−33.8%), session 1046.1 s (−8.8% vs shipped 1146.7), FULL peak 12486, Task 02 2/2",
+      "claim": "Best Q2 = n46/ub2048: T_turn 108.2 s (−33.86%), session 1046.14 s (−8.77% vs shipped 1146.73), FULL peak 12486, Task 02 2/2",
       "numbers": {
         "T_turn_s": 108.2,
         "session_s": 1046.14,
-        "session_delta_pct": -8.8,
+        "session_delta_pct": -8.77,
         "FULL_peak_MiB": 12486,
         "task02_pass": "2/2"
       },
@@ -163,10 +165,10 @@
       "id": "r2-session-vs-tturn",
       "run": 2,
       "type": "result",
-      "claim": "In growing sessions ub2048 is worth 8.8% of session time, not 34% T_turn — decode dominates (~85%)",
+      "claim": "In growing sessions ub2048 is worth 8.77% of session time, not 33.86% T_turn — decode dominates (~85%)",
       "numbers": {
-        "session_delta_pct": -8.8,
-        "tturn_delta_pct": -33.8
+        "session_delta_pct": -8.77,
+        "tturn_delta_pct": -33.86
       },
       "caveats": "Matches how Zef uses flashnext",
       "source_file": "DECISIONS-v2.md V12"
@@ -180,7 +182,8 @@
         "iq3_session_s": 1077.22,
         "q2_session_s": 1046.14,
         "ratio": 1.03,
-        "iq3_task02": "1/2"
+        "iq3_task02": "1/2",
+        "delta_pct": 2.97
       },
       "caveats": "IQ3 faster prefill, slower decode (−4.4% D0)",
       "source_file": "REPORT-v2.md L7, L22, L26, L39"
@@ -310,11 +313,11 @@
       "id": "r4-engine-m",
       "run": 4,
       "type": "result",
-      "claim": "Mainline M beats fork F: session 814.9 vs 1056.4 s (−23%), FULL peak 10482 vs 12486 MiB (−2004), P32k +31.5%, D0 +12.2%",
+      "claim": "Mainline M beats fork F: session 814.87 vs 1056.39 s (−22.86%), FULL peak 10482 vs 12486 MiB (−2004), P32k +31.5%, D0 +12.2%",
       "numbers": {
         "M_session_s": 814.87,
         "F_session_s": 1056.39,
-        "session_delta_pct": -23.0,
+        "session_delta_pct": -22.86,
         "M_FULL_peak": 10482,
         "F_FULL_peak": 12486
       },
@@ -494,7 +497,7 @@
         "ncmoe": 48,
         "context": 262144
       },
-      "caveats": "Applied by the author after the v4b 256k gating run; the author's check on 2026-10-07 showed -ncmoe 48 and -c 262144 live",
+      "caveats": "Contradicts prior do-not-claim that M+256k not applied; treat as briefing assertion until results land",
       "source_file": "flashnext-PROMPT-v5-q2-baseline.md §0"
     },
     {
@@ -514,7 +517,7 @@
       "numbers": {
         "target_files": 4
       },
-      "caveats": "Fixture/process; prompt text: inputs/flashnext-eval-python-task02.md (Prompts A and B), corpus/cold/B.json (Prompt B as sent)",
+      "caveats": "Fixture/process; prompt text not in this attachment batch",
       "source_file": "task02.py + paper/TASK02_GATE.md"
     },
     {
@@ -562,26 +565,160 @@
       "id": "meth-iq3-speed-noise",
       "run": 2,
       "type": "assumption",
-      "claim": "IQ3 vs Q2 session ~3.0% is one run each and under the 3% noise floor — treat as no speed difference shown; quant choice rests on Task 02 reliability",
+      "claim": "IQ3 vs Q2 session +2.97% (1077.22 vs 1046.14 s) is one run each and under the 3% noise floor — treat as no speed difference shown; quant choice rests on Task 02 reliability",
       "numbers": {
-        "approx_session_delta_pct": 3.0,
+        "session_delta_pct": 2.97,
         "noise_floor_pct": 3
       },
-      "caveats": "1.030x is under the 3% noise floor: no established speed difference (repo README, repetitions section)",
+      "caveats": "From public README / Opus note; do not claim IQ3 is slower",
       "source_file": "README.md"
     },
     {
       "id": "meth-256k-at-most-1p3",
       "run": 4,
       "type": "assumption",
-      "claim": "256k vs 128k session is at most ~1.3% slower (825.4 vs 814.9±1.9), not identical — under 3% floor but ~5 sd from 128k mean",
+      "claim": "256k n48 vs 128k n46 session is at most ~1.30% slower (825.44 vs 814.87±1.9 s), not identical — under 3% floor but ~5 sd from 128k mean",
       "numbers": {
-        "session_256k_s": 825.4,
-        "session_128k_s": 814.9,
+        "session_256k_s": 825.44,
+        "session_128k_s": 814.87,
         "delta_pct": 1.3
       },
-      "caveats": "Source: repo README, repetitions section",
+      "caveats": "From public README / Opus note",
       "source_file": "README.md"
+    },
+    {
+      "id": "r4-applied-256k-n48",
+      "run": 4,
+      "type": "result",
+      "claim": "After the v4b gating run, the author applied M mainline, Q2, ncmoe 48, ub 2048, -c 262144 (256k), temp 0.3, no MTP; MTP + 256k OOMed at ub 2048, so twice the context was chosen over MTP's −3.94% session",
+      "numbers": {
+        "session_s": 825.44,
+        "FULL_peak_MiB": 12366,
+        "cold": "11/11",
+        "task02": "PASS",
+        "mtp_draft_buffer_MiB": 2509.67
+      },
+      "caveats": "Applied by the author, not the agent; live config confirmed by the author on 2026-10-07. No test in the repo shows MTP + 256k fitting",
+      "source_file": "results-v4.jsonl v4b-256-n48*; run-v4b-256k.sh; apply-flashnext-ctx.sh; set-opencode-flashnext-limits.sh; REPORT-v4.md L103-105; DECISIONS-v4.md X23"
+    },
+    {
+      "id": "r1-runner-up-n43",
+      "run": 1,
+      "type": "result",
+      "claim": "Run 1 runner-up n43/ub1024 also passed every numeric gate (T_turn 130.82 s, −22.57%; FULL peak 13,070 MiB) and then crashed the server on the cold Task 02 prompt — two configs, not one, crashed after passing the numbers",
+      "numbers": {
+        "T_turn_s": 130.82,
+        "delta_pct": -22.57,
+        "FULL_peak_MiB": 13070
+      },
+      "caveats": "Same ub>512 CUDA crash as n46/ub2048",
+      "source_file": "REPORT.md L14-29"
+    },
+    {
+      "id": "r3-reasoning-length-bases",
+      "run": 3,
+      "type": "caveat",
+      "claim": "Run 3 temp 1.0 reasoning-length savings depend on the base: REPORT-v3 total tokens per scored run gives Q2 −11.91% (39.2k vs 44.5k) and IQ3 −19.29% (36.4k vs 45.1k); the T3 cell means give −13.98% and −20.63%",
+      "numbers": {
+        "q2_report_pct": -11.91,
+        "iq3_report_pct": -19.29,
+        "q2_t3_pct": -13.98,
+        "iq3_t3_pct": -20.63
+      },
+      "caveats": "Name the base when quoting; not significant",
+      "source_file": "REPORT-v3.md L21-24, L60"
+    },
+    {
+      "id": "t01-bakeoff-setup",
+      "run": 0,
+      "type": "april",
+      "claim": "April 21–22 bakeoff: five outputs (Qwen3-coder:30b and DeepSeek-R1:32b, each raw ollama and in Continue + VSCodium, vs Claude Opus), three external judges (DeepSeek, Grok, Gemini 3.1 Pro), one Godot 4.6.1 C# HealthComponent task, 13-criterion / 36-point rubric",
+      "numbers": {
+        "outputs": 5,
+        "judges": 3,
+        "criteria": 13,
+        "points": 36
+      },
+      "caveats": "Continue runs were added after the author objected to raw-only runs",
+      "source_file": "april/README.md L28-53; april/rubric.md"
+    },
+    {
+      "id": "t01-judge1-totals",
+      "run": 0,
+      "type": "april",
+      "claim": "Judge 1 totals: Opus (E) 31, C 18, A/B/D 14; Judges 2 and 3 gave rankings only; all three ranked Opus first",
+      "numbers": {
+        "E": 31,
+        "C": 18,
+        "A": 14,
+        "B": 14,
+        "D": 14
+      },
+      "caveats": "The '~14' figures for Judges 2–3 were later estimates, not judge output — do not cite",
+      "source_file": "april/scores.md L12-38"
+    },
+    {
+      "id": "t01-scrub-artifact",
+      "run": 0,
+      "type": "april",
+      "claim": "Judges scored against an enum the implementers never received — the 'universal hallucination' Judge 3 reported",
+      "numbers": {},
+      "caveats": "Affects criterion 5 and in part 4 and 11",
+      "source_file": "april/task01-prompt.md; april/scores.md L41-42"
+    },
+    {
+      "id": "t01-d-incomplete",
+      "run": 0,
+      "type": "april",
+      "claim": "Output D was judged on an incomplete paste; the non-blind re-score had it at 6/36, corrected to 15/36 on the complete code",
+      "numbers": {
+        "d_incomplete": 6,
+        "d_complete": 15
+      },
+      "caveats": "All three judges' D scores rest on the incomplete code",
+      "source_file": "april/scores.md L43-51, L68"
+    },
+    {
+      "id": "t01-flashnext-34",
+      "run": 0,
+      "type": "april",
+      "claim": "September 2026: flashnext Q2 scored 34/36 on Task 01 vs Opus's April re-score of 35/36, losing points on criterion 13 for a re-entrancy bug (_isDepleted set after EmitDamageTaken)",
+      "numbers": {
+        "flashnext": 34,
+        "opus_rescore": 35
+      },
+      "caveats": "Single judge (Claude), not blind, read only, not compiled",
+      "source_file": "april/scores.md L76-87"
+    },
+    {
+      "id": "t01-probe-same-bug",
+      "run": 0,
+      "type": "april",
+      "claim": "Oct 7 probe: Opus's April HealthComponent has the same re-entrancy bug — HealthDepleted fires twice on a re-entrant hit in both outputs; three judges and two careful reviews passed Opus's guard; read consistently, the totals are equal (33/33 strict, 34/34 lenient)",
+      "numbers": {
+        "opus_depleted_fires": 2,
+        "flashnext_depleted_fires": 2
+      },
+      "caveats": "Observations, not a new score; paper must not say 'FlashNext ties Opus'",
+      "source_file": "april/probe/RESULT.txt; april/scores.md L89-111; april/README.md L68-76"
+    },
+    {
+      "id": "t01-opus-setup",
+      "run": 0,
+      "type": "april",
+      "claim": "April Opus ran in claude.ai with reference documents the local models did not have, not in Claude Code with a CLAUDE.md; the advantage was not disclosed to judges",
+      "numbers": {},
+      "caveats": "Opus version unclear (April chat 4.7, September write-up 4.8) — say just 'Opus'",
+      "source_file": "april/README.md L36, L48-49, L58-59"
+    },
+    {
+      "id": "t01-panel-caveats",
+      "run": 0,
+      "type": "april",
+      "claim": "April panel caveats: Judge 1 shares a family with two contestants; nothing was compiled except D's own agent build; letter rotation, runs per model and the compile override were not recorded",
+      "numbers": {},
+      "caveats": "Anthropic was off the panel; Opus was in no judge's family",
+      "source_file": "april/scores.md L45, L70-71; april/README.md L50-57"
     }
   ],
   "methodology_prompts": [
