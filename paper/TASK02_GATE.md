@@ -4,8 +4,8 @@
 **Raw copies:** repo root (`task02.py`, `task02_v3.py`, `task02-baseline.json`, `runs/task02-*`)
 **Updated:** 2026-10-07
 
-Campaign use: explain *what* Zef measures quality with and *why* it is hard — summarize
-probes and NOTIFIER / Prompt B vs B2. **Do not paste harness source or the full prompt.**
+What Zef measures quality with, and why it is hard: the probes, NOTIFIER, and Prompt B vs B2.
+Prompts A and B are in `inputs/flashnext-eval-python-task02.md`; Prompt B as sent is in `corpus/cold/B.json`.
 
 ---
 
@@ -42,7 +42,7 @@ holds only model-written `.py` files until score.
 
 ## Why it breaks (or stresses) local LLMs
 
-Campaign-safe framing — these are observed properties of the gate, not insults to the model:
+These are observed properties of the gate, not judgments of the model:
 
 1. **Long agentic generation.** Baseline scored run: `predicted_n` **58,765** tokens,
    wall **~1921 s** (~32 min), `finish_reason: stop`, all four files present. Budget is
@@ -75,8 +75,8 @@ Campaign-safe framing — these are observed properties of the gate, not insults
 Docstring: **“Diagnostic only … Never the gate.”**
 
 Many IQ3 / temp-1.0 “fails” are **placement** fails: diagnostic logic PASS (same profile as
-passing Q2), literal gate FAIL (`NameError` on bare `NOTIFIER`). Campaign framing: prefer
-**prompt ambiguity / integration**, not “dumb quant.”
+passing Q2), literal gate FAIL (`NameError` on bare `NOTIFIER`). They read as
+**prompt ambiguity / integration** failures, not quant capability failures.
 
 ---
 
@@ -96,9 +96,9 @@ Run 3–4 writeups to explain slips without re-running as a pass.
 
 ---
 
-## Harness files in this package
+## Harness files in this repo
 
-| Curated name | What it is |
+| File | What it is |
 |---|---|
 | `task02.py` | v2 Phase F runner: clean-room gen + extract + score |
 | `task02_v3.py` | v3: W9 extractor, `/slots` sampling verify, NOTIFIER map, diag score |
@@ -134,13 +134,13 @@ Matches Run 1 REPORT note that baseline needed **58,765** tokens to reach `stop`
 
 ---
 
-## Mismatches / gaps vs prior curation
+## Notes
 
 | Topic | Notes |
 |---|---|
-| Prompt text itself | **Not** in this attachment batch — only runners + one scored JSON. Prompt path documented; do not invent prompt wording in posts. |
+| Prompt text | Prompts A and B: `inputs/flashnext-eval-python-task02.md`. Prompt B as sent: `corpus/cold/B.json`. |
 | Baseline JSON vs Run 1 | Aligns (`predicted_n` 58765). Treat as the Run 1 baseline Task 02 artifact, not a new night. |
-| “Breaks local LLMs” | User framing for why the fixture matters; curated facts still say IQ3 logic often PASS on diagnostic — don’t claim models are generally broken. |
-| B vs B2 | Prior METHOD_PROMPTS / `meth-v5-prompt-b2` already correct; this package confirms harness-side diag vs gate split. |
-| Rubric /36 | Run 2 REPORT mentions provisional rubric scores (34/36 etc.) — **not** in these three files; keep citing REPORT if used. |
+| “Breaks local LLMs” | Describes how demanding the gate is. IQ3’s logic passed the diagnostic probe on its gate failures; models are not generally broken. |
+| B vs B2 | B2 is planned for Run 5 (METHOD_PROMPTS, `meth-v5-prompt-b2`); the harness keeps the diagnostic score separate from the gate. |
+| Rubric /36 | The 13-criterion rubric is in `april/rubric.md`. Run 2’s provisional rubric scores (34/36 etc.) are in `REPORT-v2.md`. |
 

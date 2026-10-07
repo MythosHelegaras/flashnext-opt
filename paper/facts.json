@@ -494,7 +494,7 @@
         "ncmoe": 48,
         "context": 262144
       },
-      "caveats": "Contradicts prior do-not-claim that M+256k not applied; treat as briefing assertion until results land",
+      "caveats": "Applied by the author after the v4b 256k gating run; the author's check on 2026-10-07 showed -ncmoe 48 and -c 262144 live",
       "source_file": "flashnext-PROMPT-v5-q2-baseline.md §0"
     },
     {
@@ -514,7 +514,7 @@
       "numbers": {
         "target_files": 4
       },
-      "caveats": "Fixture/process; prompt text not in this attachment batch",
+      "caveats": "Fixture/process; prompt text: inputs/flashnext-eval-python-task02.md (Prompts A and B), corpus/cold/B.json (Prompt B as sent)",
       "source_file": "task02.py + paper/TASK02_GATE.md"
     },
     {
@@ -567,7 +567,7 @@
         "approx_session_delta_pct": 3.0,
         "noise_floor_pct": 3
       },
-      "caveats": "From public README / Opus note; do not claim IQ3 is slower",
+      "caveats": "1.030x is under the 3% noise floor: no established speed difference (repo README, repetitions section)",
       "source_file": "README.md"
     },
     {
@@ -580,7 +580,7 @@
         "session_128k_s": 814.9,
         "delta_pct": 1.3
       },
-      "caveats": "From public README / Opus note",
+      "caveats": "Source: repo README, repetitions section",
       "source_file": "README.md"
     }
   ],

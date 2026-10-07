@@ -69,7 +69,7 @@ MTP n-max (session rep1): k3 814.4 · **k2 792.4** · k1 839.9.
 | 4 | M | 2048 | 47 | 13278 (122 margin) | Prefer **n48** 12366 |
 | 4 | M | 2048 | 48 | **12366** | Prefer; MTP incompatible |
 
-## G. Story arc numbers (campaign-friendly deltas)
+## G. Key deltas
 
 | Claim | Numbers | First proven in |
 |---|---|---|

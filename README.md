@@ -58,15 +58,15 @@ unless a table says otherwise. The single-rep claims stand for these reasons:
 
 | Claim | Reps | Why it holds |
 |---|---|---|
-| Mainline vs fork session time, −23% (v4) | M: 3 (813.2 / 816.9 / 814.6 s). F: 1 | F was measured twice on separate days and driver versions: 1,046.1 s (v2) and 1,056.4 s (v4), 1% apart. The gap is 230+ s, against a run-to-run sd of 1.9 s. |
-| `-ub 2048` vs `-ub 512` session time, −8.8% (v2) | 1 each | The largest session sd observed in any 3-rep set is 8.5 s (1.1%). The gap is 101 s. |
-| MTP session time, −3.9% (v4) | 3 each | 782.8 ±8.5 vs 814.9 ±1.9 s. Welch t ≈ 6.4. |
-| Full-window VRAM peak under the 13,400 MiB gate | 1 | Shipped 256k config peaks at 12,366 MiB: a 1,034 MiB margin, about 4.5× the ~230 MiB allocator noise seen across runs. Configs inside that noise (ncmoe 47 at 256k: 122 MiB margin) were rejected. |
-| Full-window decode/prefill, fork vs mainline | 1 each | Differences are 46% (decode) and 2× (prefill), against 1–2% sd on the 3-rep throughput metrics. |
+| Mainline vs fork session time, −22.86% (v4) | M: 3 (813.15 / 816.87 / 814.60 s). F: 1 | F was measured twice on separate days and driver versions: 1,046.14 s (v2) and 1,056.39 s (v4), 0.98% apart. The gap is 231.27–241.52 s, against a run-to-run sd of 1.88 s. |
+| `-ub 2048` vs `-ub 512` session time, −8.77% (v2) | 1 each | The largest session sd observed in any 3-rep set is 8.48 s (1.08%). The gap is 100.59 s. |
+| MTP session time, −3.94% (v4) | 3 each | 782.78 ±8.48 vs 814.87 ±1.88 s. Welch t = 6.40. |
+| Full-window VRAM peak under the 13,400 MiB gate | 1 | Shipped 256k config peaks at 12,366 MiB: a 1,034 MiB margin, 4.50× the ~230 MiB allocator noise seen across runs. Configs inside that noise (ncmoe 47 at 256k: 122 MiB margin) were rejected. |
+| Full-window decode/prefill, fork vs mainline | 1 each | Differences are +46.36% (decode) and 2.03× (prefill), against at most 4.71% sd on any 3-rep throughput metric in `REPORT-v4.md`. |
 
 Two claims are weaker than the reports' wording suggests:
-- **IQ3_XXS is 3.0% slower per session than Q2 (v2).** One rep each, and below the 3% noise floor. Treat it as no established speed difference. The quant decision rests on Task 02 reliability (v3), not speed.
-- **256k costs nothing vs 128k (v4b).** 825.4 s (1 rep) vs 814.9 ±1.9 s. That is +1.3%, under the 3% floor but about 5 sd from the 128k mean. Report it as "at most ~1.3% slower", not as identical.
+- **IQ3_XXS is 2.97% slower per session than Q2 (v2).** One rep each, and below the 3% noise floor. Treat it as no established speed difference. The quant decision rests on Task 02 reliability (v3), not speed.
+- **256k costs nothing vs 128k (v4b).** 825.44 s (1 rep) vs 814.87 ±1.88 s. That is +1.30%, under the 3% floor but 5.64 sd from the 128k mean. Report it as "+1.30% slower", not as identical.
 
 Task 02 pass rates (v3) are 6 runs per arm. None of the differences are significant (Fisher p = 0.23–0.55), and `REPORT-v3.md` says so.
 

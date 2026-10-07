@@ -6,8 +6,7 @@
 **Updated:** 2026-10-07
 
 These are the mission briefs Claude Code ran unattended on Zef’s desktop (“Monster”).
-Each maps 1:1 to a run’s REPORT/DECISIONS. Campaign use: transparency / process posts —
-summarize gates and rules; **do not dump full prompts**.
+Each maps 1:1 to a run’s REPORT/DECISIONS. The full prompts are in the repo root.
 
 ---
 
@@ -35,7 +34,7 @@ summarize gates and rules; **do not dump full prompts**.
 | `flashnext-PROMPT-v4-mainline-mtp.md` | **4** | Fork F vs mainline M; MTP on M (Q2 only) | `session_s` | **No** |
 | `flashnext-PROMPT-v5-q2-baseline.md` | **5** (results pending) | `reasoning_effort` × `presence_penalty`; freeze Q2 baseline | Task 02 B2 pass count, then runaways, then tokens | **No** |
 
-Run **6** has no prompt in this batch yet.
+Run **6** has no prompt yet.
 
 ---
 
@@ -78,11 +77,11 @@ Run **6** has no prompt in this batch yet.
 - **Prompt asserts live block:** mainline `abeada335`, `-ncmoe 48 -b 2048 -ub 2048 -c 262144`, temp 0.3 — **see contradiction flag below**.
 - **Task change:** Prompt **B2** = Prompt B + explicit sentence that `NOTIFIER` lives in `breaker_events` (fixes ambiguity that caused v2–v4 gate fails). `length` at 60k = runaway = failure (no re-run-away).
 - **Decision order:** highest Task 02 pass count → fewest runaways → lowest mean tokens. `medium` may only win if pass count ≥ X0’s.
-- **Results:** not in package yet — do not claim outcomes.
+- **Results:** not yet available.
 
 ---
 
-## Gates & metrics cheat sheet (campaign-safe)
+## Gates & metrics cheat sheet
 
 | Gate / rule | Definition | Introduced |
 |---|---|---|
@@ -109,21 +108,19 @@ Run **6** has no prompt in this batch yet.
 
 ---
 
-## Contradiction / caveat flags (vs earlier curated claims)
+## Contradictions and caveats
 
-| Topic | Prompt says | Earlier curated | Action for campaign |
+| Topic | Prompt says | Later evidence | Reading |
 |---|---|---|---|
-| MTP | v1: out of scope, “measured slower on this box” | Run 4: MTP k=2 **recommended** on mainline | Say the old slowdown was a **different experimental patch**; v4 retested merged MTP |
+| MTP | v1: out of scope, “measured slower on this box” | Run 4: MTP k=2 **recommended** on mainline | The old slowdown came from a **different experimental patch**; v4 retested the merged MTP |
 | Sampling | v1: leave temp 0.3 fixed | Run 3 tested 1.0 | Process evolved; not a data contradiction |
-| Live production after Run 4 | Campaign: “still F n46/ub2048; M+MTP recommended not applied” | **v5 prompt asserts** live block is already **mainline + ncmoe 48 + c 262144** | **FLAG:** prompt-asserted live state as of v5 briefing. Do **not** claim M/256k applied until Run 5 REPORT/status confirms. Update “do-not-claim” if/when results land |
-| Gate-4 NOTIFIER | v2–4 treated slip as model/quant issue | v5: spec never said which module holds NOTIFIER; B2 fixes it | Prefer “prompt ambiguity” framing going forward; prior fails not pure capability fails |
+| Live production after Run 4 | REPORT-v4: “still F n46/ub2048; M+MTP recommended, not applied” | **v5 prompt asserts** the live block is **mainline + ncmoe 48 + c 262144** | Applied by the author after the v4b 256k gating run (`run-v4b-256k.sh`, `apply-flashnext-ctx.sh`); the author's check on 2026-10-07 showed `-ncmoe 48` and `-c 262144` live |
+| Gate-4 NOTIFIER | v2–4 treated slip as model/quant issue | v5: spec never said which module holds NOTIFIER; B2 fixes it | Prior gate-4 fails read as prompt ambiguity, not pure capability fails |
 | Cross-run speeds | v2/v4 prompts forbid mixing binaries/drivers | Already in brief | Keep |
 
 ---
 
-## Campaign process hooks (optional posts)
-
-Use these without pasting prompt text:
+## Process highlights
 
 1. **Agent-driven overnight benches** — Claude Code unattended on the desktop box; HARD_STOP morning restore.
 2. **Gates before glory** — VRAM 13.4 GB, 11 cold starts, Task 02 probes; fail any → no ship.
